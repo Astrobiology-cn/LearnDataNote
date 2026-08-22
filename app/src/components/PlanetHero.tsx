@@ -2,6 +2,8 @@ import { Suspense, lazy, useState, useEffect } from 'react';
 
 const PlanetCanvas = lazy(() => import('./PlanetCanvas'));
 
+import { useIsDark } from '../hooks/useIsDark';
+
 const REDUCED_MOTION =
   typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -34,6 +36,7 @@ export default function PlanetHero({
 }: { children: React.ReactNode } & React.HTMLAttributes<HTMLDivElement>) {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [webglAvailable, setWebglAvailable] = useState(true);
+  const isDark = useIsDark();
 
   useEffect(() => {
     // Check WebGL support
@@ -93,18 +96,20 @@ export default function PlanetHero({
         }}
       />
 
-      {/* 底部极淡弧光收口（卷一叙事「星球淡出为幽微光环、底部极淡弧光收口」）：
+      {/* 底部弧光收口（卷一叙事「星球淡出为幽微光环、底部极淡弧光收口」）：
           滚动后段淡入的铜橙弧光，填充 Hero 下半场的视觉空带，随后随 section
           一起滚出，把视线交棒给自纵深飞来的火箭。
-          椭圆心贴在 Hero 底缘稍下（112%），只让弧光上缘漫进画面，保持「极淡」 */}
+          椭圆心贴在 Hero 底缘稍下（112%），只让弧光上缘漫进画面。
+          R4：浅色模式 alpha 0.13→0.28、淡入起点 0.3→0.2——羊皮纸上 13% 的铜橙
+          几乎不可见（R3 盲测「整张空白纸」的主因之一），浅色需更高浓度才读得出；
+          深色维持 0.13 不变 */}
       <div
         aria-hidden="true"
         className="absolute bottom-0 left-0 right-0 z-[1] pointer-events-none"
         style={{
           height: '55%',
-          background:
-            'radial-gradient(ellipse 90% 78% at 50% 112%, hsl(var(--primary) / 0.13) 0%, transparent 65%)',
-          opacity: Math.min(Math.max((scrollProgress - 0.3) / 0.5, 0), 1),
+          background: `radial-gradient(ellipse 90% 78% at 50% 112%, hsl(var(--primary) / ${isDark ? 0.13 : 0.28}) 0%, transparent 65%)`,
+          opacity: Math.min(Math.max((scrollProgress - 0.2) / 0.55, 0), 1),
         }}
       />
 

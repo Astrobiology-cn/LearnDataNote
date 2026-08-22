@@ -67,11 +67,12 @@ export default function SharedSpaceBackground() {
     }
 
     function buildStars() {
-      const count = Math.max(120, Math.min(280, Math.floor((W * H) / 9000)));
+      // R4：密度 /9000→/7000（浅色星图偏稀是盲测「空白纸」观感的帮凶）
+      const count = Math.max(160, Math.min(360, Math.floor((W * H) / 7000)));
       stars = Array.from({ length: count }, () => ({
         x: Math.random(),
         y: Math.random() * 1.15, // 预留视差余量
-        r: 0.4 + Math.random() * 1.3,
+        r: 0.5 + Math.random() * 1.4,
         base: 0.25 + Math.random() * 0.7,
         tw: 0.4 + Math.random() * 1.6,
         ph: Math.random() * Math.PI * 2,
@@ -121,7 +122,8 @@ export default function SharedSpaceBackground() {
         const tw = animate ? 0.55 + 0.45 * Math.sin(now * 0.001 * s.tw + s.ph) : 1;
         const a = s.base * tw;
         // 浅色模式压低整体亮度，避免"纸上过曝"
-        const alpha = scene.isDark ? a : a * 0.5;
+        // R4：0.5→0.68（0.5 在羊皮纸上稀到近乎不可见，盲测误判"页面坏了"）
+        const alpha = scene.isDark ? a : a * 0.68;
         ctx.beginPath();
         ctx.fillStyle = scene.fg;
         ctx.globalAlpha = Math.max(0, Math.min(1, alpha));

@@ -32,7 +32,8 @@ const sections = [
   {
     id: 'resources',
     title: '外部资源',
-    desc: '精选数据库、分析工具、权威期刊、学术会议和教育资源。',
+    // \n 处分行：280px 容器下 22 字会断出「源。」孤字行（R4 修复，同 Knowledge 幕纪律）
+    desc: '精选数据库、分析工具、权威期刊、\n学术会议和教育资源。',
     link: '/resources/',
     linkText: '进入外部资源',
     Scene: ResourcesScene,

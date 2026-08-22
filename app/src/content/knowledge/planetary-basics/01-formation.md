@@ -11,7 +11,7 @@ order: 1
 
 尘埃颗粒通过碰撞聚合形成星子，星子通过引力聚集形成行星胚胎。
 
-###  oligarchic growth
+### 寡头生长（oligarchic growth）
 
 大质量行星胚胎在局部区域主导吸积。
 

@@ -101,6 +101,7 @@ function StarField() {
 function PlanetBody({ scrollProgress }: { scrollProgress: number }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const matRef = useRef<THREE.ShaderMaterial>(null);
+  const isDark = useIsDark();
   const [dayMap, nightMap] = useTexture([
     '/assets/planet_day.jpg',
     '/assets/planet_night.jpg',
@@ -128,8 +129,9 @@ function PlanetBody({ scrollProgress }: { scrollProgress: number }) {
       const a = scrollProgress * 0.7;
       matRef.current.uniforms.sunDir.value.set(Math.cos(a), 0.35, Math.sin(a));
       // 滚动叙事：行星淡成幽灵圆环，成为下一场景"月落成原"的种子
+      // R4：浅色模式淡出量 0.82→0.68（羊皮纸上 18% 残影几不可见，幽灵环需更实）
       const fade = Math.min(Math.max((scrollProgress - 0.55) / 0.45, 0), 1);
-      matRef.current.uniforms.uOpacity.value = 1 - fade * 0.82;
+      matRef.current.uniforms.uOpacity.value = 1 - fade * (isDark ? 0.82 : 0.68);
     }
   });
 

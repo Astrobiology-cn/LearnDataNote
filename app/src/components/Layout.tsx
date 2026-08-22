@@ -61,6 +61,11 @@ export default function Layout() {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  /* ── 路由切换滚回顶部（hash 路由默认保留滚动深度，子页面会从半山腰进入）── */
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+  }, [location.pathname]);
+
   /* ── Click outside → close search ── */
   useEffect(() => {
     function handler(e: MouseEvent) {

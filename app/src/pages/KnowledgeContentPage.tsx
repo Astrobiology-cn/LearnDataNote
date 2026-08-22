@@ -32,7 +32,10 @@ const LINE_HEIGHTS = [
 export default function KnowledgeContentPage() {
   const { subjectId } = useParams<{ subjectId: string }>();
   const subject = getSubjectById(subjectId || '');
-  const chapters = subject ? getChaptersBySubject(subject.id) : [];
+  // useMemo 固定引用：getChaptersBySubject 每次渲染返回新数组，会让下游
+  // fuse useMemo 与搜索 useEffect 每轮都重跑（setSearchResults([]) 新引用）——
+  // 渲染→effect→setState→渲染 死循环（Maximum update depth exceeded，页面白屏）
+  const chapters = useMemo(() => (subject ? getChaptersBySubject(subject.id) : []), [subject]);
   const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
   const activeChapter = chapters.find((c) => c.id === activeChapterId) || chapters[0];
 

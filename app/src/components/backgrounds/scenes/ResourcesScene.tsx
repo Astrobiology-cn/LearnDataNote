@@ -881,7 +881,7 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
           }}
         >
           <p className="label-plate mb-3 opacity-80">{title}</p>
-          <p className="text-sm text-secondary-foreground/60 leading-relaxed mb-7">{desc}</p>
+          <p className="text-sm text-secondary-foreground/60 leading-relaxed mb-7 whitespace-pre-line">{desc}</p>
 
           {/* 线框信号接收器入口：仰天抛物面小碟 + 馈源杆 + 立柱基座，
               与大射电望远镜呼应但不雷同；默认 currentColor，仅 hover 转铜橙 */}

@@ -19,9 +19,10 @@ import { readCanvasTheme, observeCanvasTheme } from '../../../lib/canvasTheme';
  * 带短航迹飞回星海原位，再次进入重新点名。
  *
  * 入口：场景水平中轴线上固定北斗七星（真实比例，斗勺四星 + 斗柄三星
- * 弧排，摇光略亮）。默认主题前景色、无连线；仅 hover 七星包围盒时
- * 斗身→斗柄逐段连线（每段 150ms）并点亮铜橙，下方浮现"进入学者信息"
- * （react-router Link）；离开 hover（或标题散掉）时逐段熄灭。
+ * 弧排，摇光略亮；R4 再放大至 min(0.30W, 560)）。常态以极淡主色折线连出
+ * 勺形（读出星座轮廓，不再是 7 粒孤点）；hover 七星包围盒时斗身→斗柄
+ * 逐段点亮铜橙（每段 150ms），下方浮现"进入学者信息"（react-router Link）；
+ * 离开 hover（或标题散掉）时逐段熄灭。
  *
  * 中文铭牌 + desc 位于 SCHOLARS 正下方同轴居中，组装完成后淡入、
  * 划走先淡没。场景入场星野淡入为时间驱动（进入视口即起 ~1.4s
@@ -526,9 +527,10 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
     }
 
     /** 北斗七星屏幕坐标：水平中轴，铭牌描述下方居中。
-     *  R3 放大（scale 上限 120→380）：标题聚成后下方空间的视觉重量由北斗承担 */
+     *  R3 放大（scale 上限 120→380）；R4 再放大（380→560，占比 0.26W→0.30W）——
+     *  盲测仍报告「字下方约半屏空地」，北斗需承担下半屏的视觉重量 */
     function layoutDipper() {
-      const scale = Math.min(W * 0.26, 380);
+      const scale = Math.min(W * 0.3, 560);
       const ox = (Math.min(...DIPPER_STARS.map((p) => p.x)) + Math.max(...DIPPER_STARS.map((p) => p.x))) / 2;
       const oy = (Math.min(...DIPPER_STARS.map((p) => p.y)) + Math.max(...DIPPER_STARS.map((p) => p.y))) / 2;
       const cx = W / 2;
@@ -907,6 +909,21 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
               ? 1 - easeFade(clamp01((now - dipT0) / FADE_MS))
               : 0;
 
+      // 北斗常态基线（R4）：极淡主色折线连出「勺形」，无 hover 时也可辨认——
+      // 此前默认无连线，7 粒孤点在下半屏读作噪点（盲测「字下方半屏空地」）；
+      // hover 时铜橙逐段点亮叠加其上，交互层意象不变
+      ctx.lineWidth = 0.6;
+      ctx.strokeStyle = `rgba(${rgb},${((isDark ? 0.16 : 0.14) * sf).toFixed(3)})`;
+      ctx.beginPath();
+      for (const [ai, bi] of DIPPER_SEGS) {
+        const a = dip[ai];
+        const b = dip[bi];
+        if (!a || !b) continue;
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+      }
+      ctx.stroke();
+
       // 斗身→斗柄逐段连线
       ctx.lineWidth = 0.8;
       for (let i = 0; i < DIPPER_SEGS.length; i++) {
@@ -927,7 +944,7 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
         const dm = Math.hypot(p.x - mouse.x, p.y - mouse.y);
         const hov = dipHover ? Math.max(0, 1 - dm / 70) : 0;
         const endStar = i === 6;
-        const baseR = endStar ? 3.5 : 2.8;
+        const baseR = endStar ? 4.1 : 3.3; // R4：2.8/3.5 → 3.3/4.1（随北斗整体放大）
         const baseA = endStar ? 1.0 : 0.88;
         const twinkle = animate ? 0.75 + 0.25 * Math.sin((now * Math.PI * 2) / 4000 + DIPPER_PHASES[i]) : 0.9;
         const r = baseR * (1 + dipLitF * 0.2 + hov * 0.35);

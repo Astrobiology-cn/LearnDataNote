@@ -18,16 +18,18 @@ gsap.registerPlugin(ScrollTrigger);
  * 铭牌维持 HTML。
  *
  * 滚动叙事（ScrollTrigger scrub，start 'top bottom' → end 'bottom top'，双向可逆）：
- * - 进入段（t<0.38）：火箭自 Hero 行星末态屏位（0.5W, 0.40H）后方的真 z 深度
- *   飞出——起点 z 大（透视缩放 ≈0.16）、alpha 自 u≈0.02 即起沿 E-FADE 淡入
- *   （R3 前提显影：消除 Hero 收场与火箭显影之间的空带），随 smoothstep 缓动
- *   向观察者飞近（z→0），缩放由投影 1/z 天然给出（无幂次假透视）；
- *   机头偏航朝向观察者，随停靠转正；
- * - 停靠段（0.38–0.62）：悬停 0.45H（sin ±4px 微浮动），宣言浮层淡入，
- *   Our Mission 铭牌同步（略错峰）淡入；
- * - 离场段（t>0.62）：z 增大远去（透视缩回小点）、alpha→0 消失，机头转入纵深，
+ * - 进入段（t<0.34）：火箭自 Hero 行星末态屏位（0.5W, 0.32H）后方的真 z 深度
+ *   飞出——起点 z 大（透视缩放 ≈0.22）、alpha 自 u=0 即起沿 E-FADE 淡入
+ *   （R3 前提显影；R4 再前提并抬高进入段起点屏位，消除 Hero 收场与火箭显影
+ *   之间的空带），随 smoothstep 缓动向观察者飞近（z→0）并下滑至停靠高度，
+ *   缩放由投影 1/z 天然给出（无幂次假透视）；机头偏航朝向观察者，随停靠转正；
+ * - 停靠段（0.34–0.66，R4 延长平台）：悬停 0.45H（sin ±4px 微浮动），宣言浮层
+ *   淡入，Our Mission 铭牌同步（略错峰）淡入；
+ * - 离场段（t>0.66）：z 增大远去（透视缩回小点）、alpha→0 消失，机头转入纵深，
  *   宣言/铭牌随离场淡出。
  * 淡化走 E-FADE cubic-bezier(0.455,0.03,0.515,0.955)。尾焰长度只看滚动速度。
+ * 进入段前段幕顶漫入一道铜橙细弧（R4「轨道弧线回响」，呼应 Hero 弧光收口的
+ * 圆形母题），火箭临近停靠时淡出——填住 Hero 收场与火箭显影之间的视觉空档。
  *
  * 构图（R3 盲测修复）：火箭基准 L 再放大（min(0.72W, 1.12H)），宣言字号放大
  * 至 clamp(18px, 1.5vw+9px, 38px)，整幕垂直三段（铭牌 top-24 / 舟 0.45H /
@@ -92,7 +94,11 @@ function cubicBezierEasing(x1: number, y1: number, x2: number, y2: number) {
 
 type Pose = { x: number; y: number; z: number; alpha: number; dock: number };
 
-const Z_SCALE = 0.16; // 远端透视缩放（完全由 z 深度的投影 1/z 给出；R3 自 0.06 上调，显影前提后远端不再缩成不可见的点）
+/** 停靠平台期边界（R4：0.38/0.62 → 0.34/0.66，饱满构图覆盖更长滚动区间） */
+const IN = 0.34;
+const OUT = 0.66;
+
+const Z_SCALE = 0.22; // 远端透视缩放（完全由 z 深度的投影 1/z 给出；R3 自 0.06 上调至 0.16、R4 再上调至 0.22，显影前提后远端不再缩成不可见的点）
 
 /**
  * 滚动进度 → 火箭位姿：z 深度远点逼近 → 中段停靠（z=0）→ z 增大远去消失。
@@ -100,27 +106,26 @@ const Z_SCALE = 0.16; // 远端透视缩放（完全由 z 深度的投影 1/z �
  * 幂次假透视——投影 s=F/(F+z) 天然给出远小近大；淡化走 E-FADE。
  */
 function pose(t: number, W: number, H: number, F: number): Pose {
-  const IN = 0.38;
-  const OUT = 0.62;
   const Z_FAR = F * (1 / Z_SCALE - 1);
   if (t < IN) {
-    // 「从星球背后飞出」：起点锚定 Hero 行星末态屏位（0.5W, 0.40H）后方的
-    // 真 z 深度（缩放 ≈0.16），alpha 自 u≈0.02 即起淡入（R3 显影前提，消灭
-    // Hero 收场后的空带），随后 z→0 向观察者飞近放大，机头偏航朝向观察者、
-    // 随停靠转正。
+    // 「从星球背后飞出」：起点锚定 Hero 行星末态屏位后方的真 z 深度
+    // （缩放 ≈0.22），alpha 自 u=0 即起淡入（R3/R4 显影前提，消灭 Hero 收场后
+    // 的空带），随后 z→0 向观察者飞近放大；屏位自 0.32H 下滑至停靠 0.45H
+    // （R4：进入段起点抬高，火箭更早进入视口，纵深飞来同时缓缓下降入座），
+    // 机头偏航朝向观察者、随停靠转正。
     const u = clamp01(t / IN);
     const s = smooth(u);
     return {
       x: W * 0.5,
-      y: lerp(H * 0.4, H * 0.45, s),
+      y: lerp(H * 0.32, H * 0.45, s),
       z: Z_FAR * (1 - s),
-      alpha: E_FADE(clamp01((u - 0.02) / 0.3)),
+      alpha: E_FADE(clamp01(u / 0.22)),
       dock: smooth((t - (IN - 0.06)) / 0.06),
     };
   }
   if (t > OUT) {
     // 离场段：位置/深度走 smoothstep（起步缓、随后加速远离），缩放由 z 投影
-    // 天然前载——t≈0.79（section 滚出前）z 已过半程，视觉缩到 ≈0.11
+    // 天然前载——t≈0.83（section 滚出前）z 已过半程，视觉缩到 ≈0.36
     const v = clamp01((t - OUT) / (1 - OUT));
     const sv = smooth(v);
     return {
@@ -134,15 +139,15 @@ function pose(t: number, W: number, H: number, F: number): Pose {
   return { x: W * 0.5, y: H * 0.45, z: 0, alpha: 1, dock: 1 };
 }
 
-/** 宣言浮层清晰度：接近停靠点 0→1，远离 1→0 */
+/** 宣言浮层清晰度：接近停靠点 0→1，远离 1→0（R4 与停靠平台 0.34–0.66 对齐加宽） */
 function textAlpha(t: number) {
-  const raw = smooth((t - 0.28) / 0.1) * (1 - smooth((t - 0.62) / 0.1));
+  const raw = smooth((t - 0.24) / 0.1) * (1 - smooth((t - 0.66) / 0.1));
   return E_FADE(clamp01(raw));
 }
 
 /** Our Mission 铭牌透明度：随停靠淡入（较宣言略早错峰）、随离场淡出，走 E-FADE */
 function plateAlpha(t: number) {
-  const raw = smooth((t - 0.26) / 0.1) * (1 - smooth((t - 0.6) / 0.1));
+  const raw = smooth((t - 0.22) / 0.1) * (1 - smooth((t - 0.64) / 0.1));
   return E_FADE(clamp01(raw));
 }
 
@@ -246,10 +251,29 @@ export default function RocketManifesto() {
       // 偏航：入场机头偏向观察者（自星球纵深飞出），离场转入纵深；停靠转正
       const YAW_MAX = 0.85;
       let yaw = 0;
-      if (t < 0.38) yaw = -YAW_MAX * (1 - smooth(clamp01(t / 0.38)));
-      else if (t > 0.62) yaw = YAW_MAX * smooth(clamp01((t - 0.62) / 0.38));
+      if (t < IN) yaw = -YAW_MAX * (1 - smooth(clamp01(t / IN)));
+      else if (t > OUT) yaw = YAW_MAX * smooth(clamp01((t - OUT) / (1 - OUT)));
       // 绕纵轴进动：飞行中缓旋，停靠收敛至 π/4（四翼呈 X 交叉）
       const roll = Math.PI / 4 + (animate ? (1 - p.dock) * now * 0.0005 : 0);
+
+      // 轨道弧线回响（R4，卷一圆形母题）：进入段前段，一道铜橙细弧自幕顶漫入
+      // （呼应 Hero 弧光收口），火箭临近停靠时淡出——填住 Hero 收场与火箭显影
+      // 之间的视觉空档。t∈[0,0.08] 淡入、峰值维持至 0.22、0.22→0.34 淡出。
+      const arcA = smooth(t / 0.08) * (1 - smooth((t - 0.22) / 0.12));
+      if (arcA > 0.003) {
+        const arcBase = theme.isDark ? 0.16 : 0.3;
+        ctx.save();
+        ctx.strokeStyle = `rgba(${theme.copper},1)`;
+        ctx.lineWidth = 1;
+        for (const [rr, aa] of [[0.82, 1], [0.9, 0.5]] as const) {
+          ctx.globalAlpha = arcA * arcBase * aa;
+          ctx.beginPath();
+          ctx.arc(W * 0.5, -H * 0.6, H * rr, Math.PI * 0.25, Math.PI * 0.75);
+          ctx.stroke();
+        }
+        ctx.restore();
+        ctx.globalAlpha = 1;
+      }
 
       // 火箭 3D 线框（描边色随主题；铜橙仅腹部环带，取色 --primary；缩放由 z 投影天然给出）
       ctx.save();
