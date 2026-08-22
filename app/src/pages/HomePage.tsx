@@ -142,8 +142,10 @@ function BottomCta() {
    TransitionBand — 幕间过渡带（version2 §5）
    纯空 section：背景透明透出全局星空，提供物理间隔，
    让上幕的消散/退场在带内完成、下幕成形在其后开始。
+   R2：40vh → 20vh（盲测反馈「走廊比展厅长」；20vh ≈ 0.2 屏空白，
+   加上 scrub 死区后任一空窗均 < 0.5 屏，且仍保留幕间喘息节奏）。
    ═══════════════════════════════════════════════════════════════════ */
-function TransitionBand({ height = '40vh' }: { height?: string }) {
+function TransitionBand({ height = '20vh' }: { height?: string }) {
   return (
     <section
       aria-hidden="true"
@@ -169,7 +171,7 @@ export default function HomePage() {
           {i < sections.length - 1 ? (
             <TransitionBand />
           ) : (
-            <TransitionBand height="30vh" />
+            <TransitionBand height="14vh" />
           )}
         </Fragment>
       ))}

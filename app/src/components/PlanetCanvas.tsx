@@ -74,8 +74,12 @@ function StarField() {
   }, []);
 
   const ref = useRef<THREE.Points>(null);
-  useFrame(({ clock }) => {
-    if (ref.current) ref.current.rotation.y = clock.getElapsedTime() * 0.004;
+  // 自有时间：useFrame delta 累加——frameloop 切 'never' 时回调停止，时间自然冻结，
+  // 恢复时不再把暂停时长一次性计入（修复 clock.getElapsedTime 的相位跳变）
+  const tRef = useRef(0);
+  useFrame((_, delta) => {
+    tRef.current += delta;
+    if (ref.current) ref.current.rotation.y = tRef.current * 0.004;
   });
 
   return (
@@ -113,8 +117,11 @@ function PlanetBody({ scrollProgress }: { scrollProgress: number }) {
     [dayMap, nightMap],
   );
 
-  useFrame(({ clock }) => {
-    if (meshRef.current) meshRef.current.rotation.y = clock.getElapsedTime() * 0.05;
+  // 自有时间（delta 累加）：暂停恢复不计入离屏时长，自转速度保持 0.05 rad/s 不变
+  const tRef = useRef(0);
+  useFrame((_, delta) => {
+    tRef.current += delta;
+    if (meshRef.current) meshRef.current.rotation.y = tRef.current * 0.05;
     if (matRef.current) {
       // 滚动 = 时间流逝：太阳角度随滚动旋转 ~40°，晨昏线扫过地球
       const a = scrollProgress * 0.7;
@@ -193,13 +200,17 @@ function Atmosphere() {
 function Spaceship() {
   const groupRef = useRef<THREE.Group>(null);
   const engineRef = useRef<THREE.Mesh>(null);
+  // 自有时间（delta 累加）：暂停恢复不计入离屏时长，轨道/引擎相位不跳变
+  const tRef = useRef(0);
 
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
+  useFrame((_, delta) => {
+    tRef.current += delta;
+    const t = tRef.current;
     if (groupRef.current) {
       const angle = t * 0.22;
-      groupRef.current.position.x = Math.cos(angle) * 4.4;
-      groupRef.current.position.z = Math.sin(angle) * 3.4;
+      // 轨道半径收紧（4.4/3.4 → 3.5/2.7）：近端经过投影放大后不再越出大视口右缘
+      groupRef.current.position.x = Math.cos(angle) * 3.5;
+      groupRef.current.position.z = Math.sin(angle) * 2.7;
       groupRef.current.position.y = Math.sin(t * 0.3) * 0.6 + 0.4;
       groupRef.current.rotation.y = -angle;
     }
@@ -281,11 +292,19 @@ export default function PlanetCanvas({ scrollProgress }: { scrollProgress: numbe
         // Let vertical touch scroll pass through to the page on mobile
         state.gl.domElement.style.touchAction = 'pan-y';
         // Observe the Canvas wrapper: offscreen → pause render loop
+        // 迟滞阈值：可见 ≥10% 才恢复渲染、完全离屏（ratio 0）才暂停——
+        // 避免两幕交界各露 1px 时双 canvas 同时烧帧
         const el = state.gl.domElement.parentElement ?? state.gl.domElement;
         ioRef.current?.disconnect();
-        ioRef.current = new IntersectionObserver((entries) => {
-          setFrameloop(entries[0]?.isIntersecting ? 'always' : 'never');
-        });
+        ioRef.current = new IntersectionObserver(
+          (entries) => {
+            const e = entries[0];
+            if (!e) return;
+            if (e.intersectionRatio >= 0.1) setFrameloop('always');
+            else if (!e.isIntersecting) setFrameloop('never');
+          },
+          { threshold: [0, 0.1] },
+        );
         ioRef.current.observe(el);
       }}
     >

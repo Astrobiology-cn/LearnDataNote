@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { drawScopeLineArt } from './scopeLineArt';
 import { drawToolboxLineArt } from './toolboxLineArt';
+import { readCanvasTheme, observeCanvasTheme } from '../../../lib/canvasTheme';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -44,7 +45,8 @@ gsap.registerPlugin(ScrollTrigger);
  *   知识 →」文字浮现（前景色，不用铜橙）。
  *
  * 所有 CSS 淡入淡出统一 0.5s cubic-bezier(0.455,0.03,0.515,0.955)。
- * 每帧检测 dark/light；IntersectionObserver 离屏暂停 rAF；
+ * 取色走 CSS 变量（lib/canvasTheme.ts，MutationObserver 监听 .dark 切换）；
+ * IntersectionObserver 离屏暂停 rAF（迟滞阈值 0.1）；
  * prefers-reduced-motion 静态绘制一帧成形场景；canvas pointer-events-none，
  * 拖拽监听挂在场景 wrap div 上（仅 pointerType=mouse，不与触摸滚动冲突）。
  */
@@ -246,15 +248,17 @@ export default function KnowledgeScene({ title, desc, link, linkText }: Props) {
       lidTarget = target;
       lidT0 = now;
     }
+    // CSS 变量取色（卷二 2.5 规则 1/2）：挂载时读取，.dark 切换经 MutationObserver 重取
+    let theme = readCanvasTheme();
+
     function colors() {
-      const isDark = document.documentElement.classList.contains('dark');
       return {
-        isDark,
-        main: isDark ? '#fff' : '#0B1533',
-        rgb: isDark ? '255,255,255' : '11,21,51',
-        // 地面与下一幕星野同色系（暗色取 #080E21 族），由地面线向下渐隐为透明
-        groundRgb: isDark ? '8,14,33' : '11,21,51',
-        groundA: isDark ? 0.55 : 0.07,
+        isDark: theme.isDark,
+        main: theme.main,
+        rgb: theme.rgb,
+        // 地面与下一幕星野同色系（暗色取 abyss 背景族），由地面线向下渐隐为透明
+        groundRgb: theme.isDark ? theme.bgRgb : theme.rgb,
+        groundA: theme.isDark ? 0.55 : 0.07,
       };
     }
 
@@ -728,15 +732,24 @@ export default function KnowledgeScene({ title, desc, link, linkText }: Props) {
 
     const cleanups: Array<() => void> = [];
 
+    // 主题切换：重取色；reduced-motion 静态帧立即重绘（动画帧由 rAF 自然用新色）
+    cleanups.push(
+      observeCanvasTheme(() => {
+        theme = readCanvasTheme();
+        if (REDUCED_MOTION) draw(0, false);
+      }),
+    );
+
     if (REDUCED_MOTION) {
       // 静态绘制一帧成形场景（地平线 + 成形标题 + 望远镜）
       draw(0, false);
     } else {
       // 离屏暂停 rAF（提示词§九：所有 canvas 必须接 IntersectionObserver）
+      // 迟滞阈值：可见 ≥10% 才启动、完全离屏才停——交界 1px 时只留一幕活跃
       const pauseObserver = new IntersectionObserver(
         (entries) => {
           const entry = entries[0];
-          if (entry.isIntersecting && !running) {
+          if (entry.intersectionRatio >= 0.1 && !running) {
             running = true;
             animationId = requestAnimationFrame(frame);
           } else if (!entry.isIntersecting && running) {
@@ -744,7 +757,7 @@ export default function KnowledgeScene({ title, desc, link, linkText }: Props) {
             cancelAnimationFrame(animationId);
           }
         },
-        { threshold: 0 },
+        { threshold: [0, 0.1] },
       );
       pauseObserver.observe(canvas);
       cleanups.push(() => pauseObserver.disconnect());

@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { drawRocketLineArt } from './backgrounds/scenes/rocketLineArt';
+import { readCanvasTheme, observeCanvasTheme } from '../lib/canvasTheme';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,21 +14,28 @@ gsap.registerPlugin(ScrollTrigger);
  * 只描边三档线宽/透明度，铜橙仅腹部一道环带），机头朝 +x，支持绕纵轴进动、
  * 偏航（入/离场机头转入/转出纵深）与俯仰（tilt 真三维旋转）。尾焰为铜橙渐变
  * （#EA6D15 → 透明），长度随滚动速度（含 z 向）变化、停靠熄灭。宣言为 HTML
- * 浮层（Noto Serif SC、背景色填充 + 铜橙细描边），Our Mission 铭牌维持 HTML。
+ * 浮层（Noto Serif SC、实心前景色，停靠时位于火箭下方安全区），Our Mission
+ * 铭牌维持 HTML。
  *
  * 滚动叙事（ScrollTrigger scrub，start 'top bottom' → end 'bottom top'，双向可逆）：
  * - 进入段（t<0.38）：火箭自 Hero 行星末态屏位（0.5W, 0.40H）后方的真 z 深度
  *   飞出——起点 z 大（透视缩放 ≈0.06）、alpha 极低（前段近乎被星球遮挡），
  *   随 smoothstep 缓动向观察者飞近（z→0），缩放由投影 1/z 天然给出（无幂次
  *   假透视）；机头偏航朝向观察者，随停靠转正；
- * - 停靠段（0.38–0.62）：悬停中央（z=0、sin ±4px 微浮动），宣言浮层淡入，
+ * - 停靠段（0.38–0.62）：悬停 0.45H（sin ±4px 微浮动），宣言浮层淡入，
  *   Our Mission 铭牌同步（略错峰）淡入；
  * - 离场段（t>0.62）：z 增大远去（透视缩回小点）、alpha→0 消失，机头转入纵深，
  *   宣言/铭牌随离场淡出。
  * 淡化走 E-FADE cubic-bezier(0.455,0.03,0.515,0.955)。尾焰长度只看滚动速度。
  *
- * 每帧检测 dark/light（isDarkMode 读 document.documentElement.classList）；
- * IntersectionObserver 离屏暂停 rAF；prefers-reduced-motion：静态绘制一帧
+ * 构图（R2 盲测修复）：火箭基准 L 随视口放大（min(0.60W, 0.98H)，去掉旧 560px
+ * 上限），大屏不再「又小又孤单」；宣言从舟腹移至火箭下方安全区（0.72H），
+ * 改实心前景色排印——镂空叠压舟腹的读感在盲测中被判定不可读，故让位可读性；
+ * 铭牌下移至 top-24，避开停靠对齐时的 sticky 导航（68px）。
+ *
+ * 取色走 CSS 变量（lib/canvasTheme.ts：getComputedStyle 读取 + MutationObserver
+ * 监听 .dark 切换重取重绘）；IntersectionObserver 离屏暂停 rAF（迟滞阈值 0.1）；
+ * prefers-reduced-motion：静态绘制一帧
  * 停靠中央的清晰火箭（宣言/铭牌常显）。
  */
 
@@ -35,11 +43,6 @@ const COPPER = '234,109,21';
 /** 宣言按语义断为两行，每行 11 字 */
 const LINE_1 = '系统化行星科学知识体系';
 const LINE_2 = '连接知识、学者与工具。';
-
-/** 当前是否为深色模式（硬编码取色，dark/light 切换） */
-function isDarkMode() {
-  return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-}
 
 /** E-FADE — 与设计 tokens 中 --ease-fade 一致 */
 const E_FADE = cubicBezierEasing(0.455, 0.03, 0.515, 0.955);
@@ -107,7 +110,7 @@ function pose(t: number, W: number, H: number, F: number): Pose {
     const s = smooth(u);
     return {
       x: W * 0.5,
-      y: lerp(H * 0.4, H * 0.52, s),
+      y: lerp(H * 0.4, H * 0.45, s),
       z: Z_FAR * (1 - s),
       alpha: E_FADE(clamp01((u - 0.22) / 0.25)),
       dock: smooth((t - (IN - 0.06)) / 0.06),
@@ -120,13 +123,13 @@ function pose(t: number, W: number, H: number, F: number): Pose {
     const sv = smooth(v);
     return {
       x: lerp(W * 0.5, W * 0.94, sv),
-      y: lerp(H * 0.52, H * 0.6, sv),
+      y: lerp(H * 0.45, H * 0.58, sv),
       z: Z_FAR * sv,
       alpha: 1 - E_FADE(smooth((v - 0.35) / 0.65)),
       dock: 1 - smooth((t - OUT) / 0.06),
     };
   }
-  return { x: W * 0.5, y: H * 0.52, z: 0, alpha: 1, dock: 1 };
+  return { x: W * 0.5, y: H * 0.45, z: 0, alpha: 1, dock: 1 };
 }
 
 /** 宣言浮层清晰度：接近停靠点 0→1，远离 1→0 */
@@ -141,14 +144,13 @@ function plateAlpha(t: number) {
   return E_FADE(clamp01(raw));
 }
 
-/** 宣言浮层文字：Noto Serif SC、背景色填充「镂空」+ 铜橙细描边（沿用原 canvas 观感） */
+/** 宣言浮层文字：Noto Serif SC、实心前景色（移出舟腹后镂空无底可衬，可读性优先） */
 const maniLineStyle: CSSProperties = {
-  fontSize: 'clamp(15px, 1.6vw, 23px)',
+  fontSize: 'clamp(16px, 1.2vw + 8px, 30px)',
   fontWeight: 600,
   lineHeight: 1.9,
   letterSpacing: '0.12em',
-  color: 'hsl(var(--background))',
-  WebkitTextStroke: '0.7px rgba(234,109,21,0.9)',
+  color: 'hsl(var(--foreground))',
 };
 
 export default function RocketManifesto() {
@@ -175,6 +177,8 @@ export default function RocketManifesto() {
     let tilt = 0;
     let animationId = 0;
     let running = false;
+    // CSS 变量取色（卷二 2.5 规则 1/2）：挂载时读取，.dark 切换经 MutationObserver 重取
+    let theme = readCanvasTheme();
 
     function build() {
       if (!canvas) return;
@@ -188,7 +192,9 @@ export default function RocketManifesto() {
       if (!ctx) return;
       ctx.clearRect(0, 0, W, H);
       const t = scrollT;
-      const L = Math.min(W * 0.62, 560);
+      // 视觉尺度随视口放大：L 取 min(0.60W, 0.98H)，不再设 560px 硬上限
+      // （大屏下火箭与宣言组不再只占屏幕中央一小块）
+      const L = Math.min(W * 0.6, H * 0.98);
       const F = 6 * L; // 焦距（与 rocketLineArt 的 F_RATIO 一致）
       const p = pose(t, W, H, F);
 
@@ -239,7 +245,7 @@ export default function RocketManifesto() {
       ctx.translate(cx, cy);
       const art = drawRocketLineArt(ctx, {
         L,
-        main: isDarkMode() ? '#FFFFFF' : '#0B1533',
+        main: theme.main,
         copper: COPPER,
         alpha: p.alpha,
         z: p.z,
@@ -292,13 +298,23 @@ export default function RocketManifesto() {
 
     const cleanups: Array<() => void> = [];
 
+    // 主题切换：重取色；reduced-motion 静态帧立即重绘（动画帧由 rAF 自然用新色）
+    cleanups.push(
+      observeCanvasTheme(() => {
+        theme = readCanvasTheme();
+        if (REDUCED_MOTION) draw(0, false);
+      }),
+    );
+
     if (REDUCED_MOTION) {
       draw(0, false);
     } else {
+      // 离屏暂停 rAF，迟滞阈值：可见 ≥10% 才启动、完全离屏才停——
+      // 两幕交界各露 1px 时只保留先前一幕活跃，避免双 canvas 同时烧帧
       const observer = new IntersectionObserver(
         (entries) => {
           const entry = entries[0];
-          if (entry.isIntersecting && !running) {
+          if (entry.intersectionRatio >= 0.1 && !running) {
             running = true;
             prevNow = 0;
             animationId = requestAnimationFrame(frame);
@@ -307,7 +323,7 @@ export default function RocketManifesto() {
             cancelAnimationFrame(animationId);
           }
         },
-        { threshold: 0 },
+        { threshold: [0, 0.1] },
       );
       observer.observe(canvas);
       cleanups.push(() => observer.disconnect());
@@ -352,10 +368,11 @@ export default function RocketManifesto() {
         className="absolute inset-0 w-full h-full pointer-events-none"
         aria-hidden="true"
       />
-      {/* 宣言 HTML 浮层：停靠期间固定于场景中央火箭腹部屏位，dock 淡入/离场淡出 */}
+      {/* 宣言 HTML 浮层：停靠期间位于火箭下方安全区（0.72H，避开舟体投影区），
+          dock 淡入/离场淡出 */}
       <div
         ref={maniRef}
-        className="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 z-10 text-center pointer-events-none"
+        className="absolute left-1/2 top-[72%] -translate-x-1/2 -translate-y-1/2 z-10 text-center pointer-events-none"
         style={{ opacity: REDUCED_MOTION ? 1 : 0 }}
       >
         <p className="font-heading" style={maniLineStyle}>
@@ -367,7 +384,7 @@ export default function RocketManifesto() {
       </div>
       <p
         ref={plateRef}
-        className="label-plate absolute top-10 left-1/2 -translate-x-1/2 z-10"
+        className="label-plate absolute top-24 left-1/2 -translate-x-1/2 z-10"
         style={{ opacity: REDUCED_MOTION ? 1 : 0 }}
       >
         Our Mission

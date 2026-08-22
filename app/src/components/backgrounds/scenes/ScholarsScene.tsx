@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import gsap from 'gsap';
+import { readCanvasTheme, observeCanvasTheme } from '../../../lib/canvasTheme';
 
 /**
  * ScholarsScene — 学者信息 section 场景组件.
@@ -26,8 +27,9 @@ import gsap from 'gsap';
  * 划走先淡没。场景入场星野淡入为时间驱动（进入视口即起 ~1.4s
  * easeOutCubic，离开 ~0.9s 反向），与滚动速度解耦。
  *
- * 铜橙只给 hover 北斗与鼠标触碰星；每帧检测 dark/light；
- * IntersectionObserver 离屏暂停 rAF；prefers-reduced-motion 静态成形帧。
+ * 铜橙只给 hover 北斗与鼠标触碰星；取色走 CSS 变量（lib/canvasTheme.ts，
+ * MutationObserver 监听 .dark 切换）；IntersectionObserver 离屏暂停 rAF
+ * （迟滞阈值 0.1）；prefers-reduced-motion 静态成形帧。
  */
 
 type Props = {
@@ -647,7 +649,7 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
       phase = 'forming';
       formingT0 = now;
       assignTargets(); // 重新点名（全新随机匹配，绝不倒放）
-      // 迁徙成形：时长统一 1.2s、stagger 8ms（随机顺序启程，缓动 E-OUT 保持）
+      // 迁徙成形：时长统一 1.2s、stagger 4ms（随机顺序启程，缓动 E-OUT 保持）
       const chosen = stars.filter((s) => s.letter).sort(() => Math.random() - 0.5);
       chosen.forEach((s, k) => {
         s.sx = s.x;
@@ -678,12 +680,14 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
       });
     }
 
+    // CSS 变量取色（卷二 2.5 规则 1/2）：挂载时读取，.dark 切换经 MutationObserver 重取
+    let theme = readCanvasTheme();
+
     function colors() {
-      const isDark = document.documentElement.classList.contains('dark');
       return {
-        isDark,
-        rgb: isDark ? '255,255,255' : '11,21,51',
-        main: isDark ? '#fff' : '#0B1533',
+        isDark: theme.isDark,
+        rgb: theme.rgb,
+        main: theme.main,
       };
     }
 
@@ -957,6 +961,14 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
       if (phase === 'ambient') build();
     });
 
+    // 主题切换：重取色；reduced-motion 静态帧立即重绘（动画帧由 rAF 自然用新色）
+    cleanups.push(
+      observeCanvasTheme(() => {
+        theme = readCanvasTheme();
+        if (REDUCED_MOTION) draw(0, false);
+      }),
+    );
+
     if (REDUCED_MOTION) {
       // 静态成形一帧：标题成形；北斗默认前景色不点亮（铜橙仅 hover 才有）
       assignTargets();
@@ -971,10 +983,11 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
       draw(0, false);
     } else {
       // 离屏暂停 rAF（提示词§九）
+      // 迟滞阈值：可见 ≥10% 才启动、完全离屏才停——交界 1px 时只留一幕活跃
       const pauseObserver = new IntersectionObserver(
         (entries) => {
           const entry = entries[0];
-          if (entry.isIntersecting && !running) {
+          if (entry.intersectionRatio >= 0.1 && !running) {
             running = true;
             animationId = requestAnimationFrame(frame);
           } else if (!entry.isIntersecting && running) {
@@ -982,7 +995,7 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
             cancelAnimationFrame(animationId);
           }
         },
-        { threshold: 0 },
+        { threshold: [0, 0.1] },
       );
       pauseObserver.observe(canvas);
       cleanups.push(() => pauseObserver.disconnect());

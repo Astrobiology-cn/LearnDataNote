@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { drawSatelliteLineArt, drawShipLineArt } from './shipLineArt';
 import { drawTelescope3D, telescopeFeedPoint } from './telescopeLineArt3D';
+import { readCanvasTheme, observeCanvasTheme } from '../../../lib/canvasTheme';
 
 /**
  * ResourcesScene — 「外部资源」section 场景组件.
@@ -34,7 +35,8 @@ import { drawTelescope3D, telescopeFeedPoint } from './telescopeLineArt3D';
  *   接收器指示灯慢闪 2s，hover 碟面微扬、指示灯铜橙急闪 0.4s、
  *   浮现入口文字。
  *
- * 每帧检测 dark class；IntersectionObserver 离屏暂停；
+ * 取色走 CSS 变量（lib/canvasTheme.ts，MutationObserver 监听 .dark 切换）；
+ * IntersectionObserver 离屏暂停（迟滞阈值 0.1）；
  * prefers-reduced-motion 静态成形一帧。
  */
 
@@ -215,17 +217,19 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
 
     /* ── 几何 ─────────────────────────────────────────────── */
 
-    /** 主题色（硬编码，随 .dark 即时判断） */
+    // CSS 变量取色（卷二 2.5 规则 1/2）：挂载时读取，.dark 切换经 MutationObserver 重取
+    let theme = readCanvasTheme();
+
+    /** 主题色（--foreground/--background 经 getComputedStyle 读取） */
     function colors() {
-      const isDark = document.documentElement.classList.contains('dark');
       return {
-        isDark,
-        main: isDark ? '#fff' : '#0B1533',
-        bg: isDark ? 'rgb(8,14,33)' : 'rgb(245,243,238)',
+        isDark: theme.isDark,
+        main: theme.main,
+        bg: `rgb(${theme.bgRgb})`,
       };
     }
 
-    /** 铜橙（恒定强调色，硬编码） */
+    /** 铜橙（恒定强调色；--primary 令牌实际解析为 #F1690E，与规格 #EA6D15 有偏差，令牌修正前维持硬编码） */
     const COPPER = '234,109,21';
 
     /** 塔架地面高度与俯仰轴（碟面摆动中心）位置 */
@@ -717,6 +721,14 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
 
     const cleanups: Array<() => void> = [];
 
+    // 主题切换：重取色；reduced-motion 静态帧立即重绘（动画帧由 rAF 自然用新色）
+    cleanups.push(
+      observeCanvasTheme(() => {
+        theme = readCanvasTheme();
+        if (REDUCED_MOTION) draw(0, false);
+      }),
+    );
+
     if (REDUCED_MOTION) {
       // 静态成形一帧
       phase = 'formed';
@@ -725,10 +737,11 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
       setCaption(true);
     } else {
       // 离屏暂停 rAF（提示词§九：所有 canvas 必须接 IntersectionObserver）
+      // 迟滞阈值：可见 ≥10% 才启动、完全离屏才停——交界 1px 时只留一幕活跃
       const pauseObserver = new IntersectionObserver(
         (entries) => {
           const entry = entries[0];
-          if (entry.isIntersecting && !running) {
+          if (entry.intersectionRatio >= 0.1 && !running) {
             running = true;
             animationId = requestAnimationFrame(frame);
           } else if (!entry.isIntersecting && running) {
@@ -736,7 +749,7 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
             cancelAnimationFrame(animationId);
           }
         },
-        { threshold: 0 },
+        { threshold: [0, 0.1] },
       );
       pauseObserver.observe(canvas);
       cleanups.push(() => pauseObserver.disconnect());

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { hslVarToRgb } from '../lib/canvasTheme';
 
 /**
  * SharedSpaceBackground — 贯穿全页的共享背景层（Sanctuary 双模式）。
@@ -8,24 +9,13 @@ import { useEffect, useRef } from 'react';
  * 墨点星图（羊皮纸感），两模式均通过 CSS 变量取色，主题切换时实时重取并重绘。
  *
  * 设计要点（对应提示词第十节）：
- *  - 颜色由 getComputedStyle 读取 --background/--foreground/--primary/--muted-foreground，
- *    绝不写死十六进制；主题切换（<html> 的 .dark class 变化）经 MutationObserver 重取。
+ *  - 颜色由 getComputedStyle 读取 --background/--foreground/--primary/--muted-foreground
+ *    （hslVarToRgb 见 lib/canvasTheme.ts），绝不写死十六进制；主题切换（<html> 的
+ *    .dark class 变化）经 MutationObserver 重取。
  *  - 铜橙 #EA6D15（--primary）两模式恒定，仅作极低不透明度的星云/微光点缀。
  *  - 支持滚动视差（星点随 scrollY 缓慢上移），prefers-reduced-motion 时只绘一帧静态，
  *    标签页隐藏时暂停 rAF。
  */
-
-function hslVarToRgb(varValue: string): string {
-  const div = document.createElement('div');
-  div.style.color = `hsl(${varValue.trim()})`;
-  div.style.position = 'absolute';
-  div.style.visibility = 'hidden';
-  div.style.pointerEvents = 'none';
-  document.body.appendChild(div);
-  const rgb = getComputedStyle(div).color;
-  document.body.removeChild(div);
-  return rgb;
-}
 
 type Scene = {
   isDark: boolean;
