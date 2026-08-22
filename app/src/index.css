@@ -1,0 +1,281 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════════
+   Design Tokens — Planetary Science Knowledge Hub
+   Sanctuary language: abyss navy, single copper accent, mega titles,
+   thin wireframe geometry, extreme negative space, slow steady motion.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  /* ── Light mode — day parchment ── */
+  :root {
+    /* Surface */
+    --background: 45 27% 95%;        /* #F5F3EE */
+    --foreground: 226 65% 12%;       /* #0B1533 */
+    --card: 0 0% 100%;
+    --card-foreground: 226 65% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 226 65% 12%;
+
+    /* Single accent: copper */
+    --primary: 24 89% 50%;           /* #EA6D15 */
+    --primary-foreground: 45 27% 96%;
+    --secondary: 45 20% 90%;
+    --secondary-foreground: 226 30% 32%;
+    --accent-c: 24 89% 50%;
+    --accent-foreground: 45 27% 96%;
+
+    /* Feedback */
+    --muted: 45 20% 90%;
+    --muted-foreground: 226 12% 42%;
+    --destructive: 0 72% 55%;        /* #E52E2E */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders & focus */
+    --border: 226 20% 84%;           /* ≈ rgba(11,21,51,0.15) */
+    --input: 226 20% 84%;
+    --ring: 24 89% 50%;
+    --radius: 0.375rem;              /* 近乎直角：6px */
+
+    /* Sidebar */
+    --sidebar-background: 45 24% 93%;
+    --sidebar-foreground: 226 12% 38%;
+    --sidebar-primary: 24 89% 50%;
+    --sidebar-primary-foreground: 45 27% 96%;
+    --sidebar-accent: 45 18% 88%;
+    --sidebar-accent-foreground: 226 65% 12%;
+    --sidebar-border: 226 20% 84%;
+    --sidebar-ring: 24 89% 50%;
+
+    /* Wireframe geometry lines */
+    --wireframe: 226 65% 12%;
+
+    /* Typography */
+    --font-display: 'Noto Serif SC', 'Geist Variable', Georgia, serif;
+    --font-heading: 'Noto Serif SC', 'Geist Variable', Georgia, serif;
+    --font-body: 'Geist Variable', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Geist Mono Variable', 'JetBrains Mono', monospace;
+
+    /* Motion — Sanctuary easings */
+    --ease-sanctuary: cubic-bezier(0.165, 0.84, 0.44, 1);
+    --ease-strong: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-fade: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  /* ── Dark mode — abyss ── */
+  .dark {
+    --background: 228 61% 8%;        /* #080E21 */
+    --foreground: 0 0% 100%;
+    --card: 226 65% 12%;             /* #0B1533 */
+    --card-foreground: 0 0% 100%;
+    --popover: 226 65% 12%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 24 89% 50%;           /* copper stays */
+    --primary-foreground: 228 61% 8%;
+    --secondary: 226 40% 16%;
+    --secondary-foreground: 0 0% 72%;
+    --accent-c: 24 89% 50%;
+    --accent-foreground: 228 61% 8%;
+
+    --muted: 226 40% 16%;
+    --muted-foreground: 224 17% 42%; /* #4E566B → lifted */
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 227 25% 22%;           /* ≈ rgba(255,255,255,0.12) */
+    --input: 227 25% 22%;
+    --ring: 24 89% 50%;
+
+    --sidebar-background: 228 55% 10%;
+    --sidebar-foreground: 0 0% 72%;
+    --sidebar-primary: 24 89% 50%;
+    --sidebar-primary-foreground: 228 61% 8%;
+    --sidebar-accent: 226 35% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 227 25% 18%;
+    --sidebar-ring: 24 89% 50%;
+
+    --wireframe: 0 0% 100%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Utility Classes
+   ═══════════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+  .font-display { font-family: var(--font-display); }
+  .font-heading { font-family: var(--font-heading); }
+  .font-body { font-family: var(--font-body); }
+  .font-mono { font-family: var(--font-mono); }
+
+  .text-balance { text-wrap: balance; }
+
+  /* Sanctuary: 11px 大写宽字距铭牌标签 */
+  .label-plate {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Sanctuary: 流体巨型标题（全大写 bold） */
+  .mega-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    font-size: clamp(3rem, 1.6rem + 6.5vw, 10rem);
+  }
+
+  /* Sanctuary: 描边空心装饰巨字 */
+  .text-outline {
+    color: transparent;
+    -webkit-text-stroke: 1px hsl(var(--foreground) / 0.4);
+  }
+
+  /* Sanctuary: 细线几何线框 */
+  .wireframe {
+    color: hsl(var(--wireframe));
+    opacity: 0.09;
+    pointer-events: none;
+  }
+
+  /* Sanctuary: 铜橙描边按钮 */
+  .btn-copper {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid hsl(var(--primary));
+    color: hsl(var(--primary));
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition:
+      background-color 0.5s var(--ease-sanctuary),
+      color 0.5s var(--ease-sanctuary);
+  }
+  .btn-copper:hover {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+
+  /* 链接下划线生长动画 */
+  .link-underline {
+    position: relative;
+  }
+  .link-underline::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    width: 100%;
+    height: 1px;
+    background: hsl(var(--primary));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  .link-underline:hover::after {
+    transform: scaleX(1);
+  }
+
+  .glass-panel {
+    background: hsl(var(--background) / 0.8);
+    border-bottom: 1px solid hsl(var(--border) / 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .glass-panel-raised {
+    background: hsl(var(--card) / 0.92);
+    border: 1px solid hsl(var(--border));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Sanctuary 卡片：细边、无影、近乎直角 */
+  .card-space {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    transition:
+      border-color 1s var(--ease-sanctuary),
+      transform 0.5s var(--ease-sanctuary);
+  }
+  .card-space:hover {
+    border-color: hsl(var(--primary) / 0.6);
+    transform: translateY(-2px);
+  }
+
+  .card-scroll {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    transition: border-color 1s var(--ease-sanctuary);
+  }
+  .card-scroll:hover {
+    border-color: hsl(var(--primary) / 0.6);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.15);
+  }
+
+  .ink-fade {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--background)) 0%,
+      transparent 50%,
+      hsl(var(--background)) 100%
+    );
+  }
+
+  .vertical-rl {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+
+  .divide-space > :not([hidden]) ~ :not([hidden]) {
+    border-color: hsl(var(--border));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Reduced Motion
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

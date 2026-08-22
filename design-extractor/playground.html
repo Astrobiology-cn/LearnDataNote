@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanctuary On The Moon — Design System Playground</title>
+<style>
+/* ============ TOKENS ============ */
+:root {
+  --accent: #EA6D15;
+  --bg: #080E21;
+  --bg-alt: #0B1533;
+  --black: #000000;
+  --text: #FFFFFF;
+  --text-70: rgba(255,255,255,0.7);
+  --text-50: rgba(255,255,255,0.5);
+  --line: rgba(255,255,255,0.15);
+  --line-subtle: rgba(255,255,255,0.10);
+  --font: 'Jost', 'Futura', 'Century Gothic', 'PingFang SC', sans-serif;
+  --ease-out-quint: cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-in-out-quad: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+  --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+}
+html[data-theme="light"] {
+  --bg: #F5F3EE;
+  --bg-alt: #EAE6DC;
+  --text: #0B1533;
+  --text-70: rgba(11,21,51,0.7);
+  --text-50: rgba(11,21,51,0.5);
+  --line: rgba(11,21,51,0.2);
+  --line-subtle: rgba(11,21,51,0.1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.6;
+  transition: background 0.5s var(--ease-out-quint), color 0.5s var(--ease-out-quint);
+}
+::selection { background: var(--accent); color: #FFFFFF; }
+
+.label {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+/* ============ TOP NAV ============ */
+.topnav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 32px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line-subtle);
+}
+.topnav .nav-links {
+  display: flex;
+  gap: 18px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.topnav .nav-links::-webkit-scrollbar { display: none; }
+.topnav a.navlink {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  opacity: 0.7;
+  transition: opacity 0.3s var(--ease-out-quint), color 0.3s var(--ease-out-quint);
+}
+.topnav a.navlink:hover { opacity: 1; color: var(--accent); }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 1s var(--ease-out-quint), color 1s var(--ease-out-quint);
+}
+.btn:hover { background: var(--accent); color: #FFFFFF; }
+.btn.btn-ghost { border-color: var(--line); color: var(--text); }
+.btn.btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
+
+/* ============ LAYOUT ============ */
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 48px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 120px 48px 160px;
+}
+.sidebar {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  border: 1px solid var(--line);
+  padding: 24px;
+}
+.sidebar .label { display: block; color: var(--text-50); margin-bottom: 12px; }
+.sidebar input[type="color"] {
+  width: 100%;
+  height: 40px;
+  border: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+}
+.sidebar .accent-hex {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.sidebar hr { border: none; border-top: 1px solid var(--line-subtle); margin: 24px 0; }
+.mode-switch { display: flex; gap: 8px; }
+.mode-switch button {
+  flex: 1;
+  padding: 10px 0;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-70);
+  font-family: var(--font);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out-quint);
+}
+.mode-switch button.active { border-color: var(--accent); color: var(--accent); }
+
+main { min-width: 0; }
+.section { margin-bottom: 160px; scroll-margin-top: 100px; }
+.section-head { display: flex; align-items: baseline; gap: 20px; margin-bottom: 48px; }
+.section-num {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+}
+.section-title {
+  font-size: 48px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+.section-desc { color: var(--text-70); max-width: 640px; margin-top: -32px; margin-bottom: 48px; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; padding: 120px 24px 120px; }
+  .sidebar { position: static; }
+  .section-title { font-size: 32px; }
+}
+
+/* ============ 1. OVERVIEW ============ */
+.hero-mega {
+  font-size: clamp(3rem, 8vw, 9rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+}
+.hero-mega .thin-line {
+  display: block;
+  height: 1px;
+  background: var(--line);
+  margin: 24px 0;
+}
+.tag-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+.tag {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-70);
+  border: 1px solid var(--line);
+  padding: 8px 16px;
+  border-radius: 99px;
+}
+.tag.accent { color: var(--accent); border-color: var(--accent); }
+
+/* ============ 2. COLOR ============ */
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.swatch {
+  background: var(--bg);
+  padding: 0;
+  cursor: pointer;
+  border: none;
+  text-align: left;
+  font-family: var(--font);
+}
+.swatch .chip { display: block; height: 96px; width: 100%; }
+.swatch .meta { padding: 14px 16px; }
+.swatch .name {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text);
+  display: block;
+}
+.swatch .hex { font-size: 13px; color: var(--text-50); }
+.swatch:hover .name { color: var(--accent); }
+.semantic-groups { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px; }
+.semantic-groups .group .label { color: var(--text-50); display: block; margin-bottom: 12px; }
+.semantic-groups .group ul { list-style: none; }
+.semantic-groups .group li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line-subtle);
+  font-size: 13px;
+}
+.semantic-groups .group li .dot {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: -1px;
+  border: 1px solid var(--line);
+}
+.semantic-groups .group li code { color: var(--text-50); font-family: monospace; font-size: 12px; }
+
+/* ============ 3. TYPOGRAPHY ============ */
+.type-table { border-top: 1px solid var(--line); }
+.type-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 2fr;
+  gap: 24px;
+  align-items: center;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--line-subtle);
+}
+.type-row .token { font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--accent); }
+.type-row .spec { font-size: 13px; color: var(--text-50); font-family: monospace; }
+.type-row .demo { color: var(--text); overflow-wrap: anywhere; }
+.demo-mega { font-size: clamp(2rem, 5vw, 4.5rem); font-weight: 700; text-transform: uppercase; line-height: 1; }
+.demo-title { font-size: 48px; font-weight: 700; text-transform: uppercase; line-height: 1.1; }
+.demo-subtitle { font-size: 24px; font-weight: 500; }
+.demo-body { font-size: 16px; font-weight: 400; line-height: 1.6; }
+.demo-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.2em; }
+.demo-logo { font-size: 14px; letter-spacing: 0.4rem; text-transform: uppercase; }
+@media (max-width: 700px) { .type-row { grid-template-columns: 1fr; gap: 8px; } .demo-title { font-size: 32px; } }
+
+/* ============ 4. SPACING ============ */
+.spacing-row { display: flex; align-items: center; gap: 24px; padding: 12px 0; border-bottom: 1px solid var(--line-subtle); }
+.spacing-row .name { width: 80px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-50); }
+.spacing-row .val { width: 60px; font-family: monospace; font-size: 13px; color: var(--text-70); }
+.spacing-row .bar { height: 12px; background: var(--accent); }
+
+/* ============ 5. SHADOWS ============ */
+.shadow-nest { background: var(--bg); border: 1px solid var(--line); padding: 32px; }
+.shadow-nest .lvl2 { background: var(--bg-alt); border: 1px solid var(--line); padding: 32px; }
+.shadow-nest .lvl3 { background: #000; border: 1px solid var(--line); padding: 32px; }
+html[data-theme="light"] .shadow-nest .lvl3 { background: #0B1533; color: #FFF; }
+html[data-theme="light"] .shadow-nest .lvl3 .label { color: rgba(255,255,255,0.5); }
+.shadow-nest .label { color: var(--text-50); display: block; margin-bottom: 8px; }
+
+/* ============ 6. RADIUS ============ */
+.radius-row { display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-end; }
+.radius-item { text-align: center; }
+.radius-item .shape { margin: 0 auto 16px; border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.radius-item .label { color: var(--text-50); }
+
+/* ============ 7. OPACITY ============ */
+.opacity-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+.opacity-cols .cell { border: 1px solid var(--line-subtle); padding: 32px; }
+.opacity-cols .label { color: var(--text-50); display: block; margin-bottom: 16px; }
+.op-text { font-size: 20px; margin-bottom: 8px; }
+.op-border { border: 1px solid; padding: 16px; margin-bottom: 8px; font-size: 13px; font-family: monospace; }
+@media (max-width: 700px) { .opacity-cols { grid-template-columns: 1fr; } }
+
+/* ============ 8. ANIMATIONS ============ */
+.anim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px; }
+.anim-card { border: 1px solid var(--line); padding: 24px; }
+.anim-card .label { color: var(--accent); display: block; margin-bottom: 8px; }
+.anim-card code { display: block; font-family: monospace; font-size: 12px; color: var(--text-50); margin-bottom: 20px; }
+.anim-stage {
+  height: 80px;
+  border: 1px solid var(--line-subtle);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.anim-box {
+  position: absolute;
+  left: 16px; top: 50%;
+  width: 40px; height: 40px;
+  margin-top: -20px;
+  background: var(--accent);
+  opacity: 0;
+}
+.anim-card.play .anim-box.a-quint { animation: slideFade 1.2s var(--ease-out-quint) forwards; }
+.anim-card.play .anim-box.a-quad { animation: slide 1.2s var(--ease-in-out-quad) forwards; opacity: 1; }
+.anim-card.play .anim-box.a-quart { animation: slide 1.2s var(--ease-in-out-quart) forwards; opacity: 1; }
+@keyframes slideFade {
+  from { transform: translateX(0); opacity: 0; }
+  to { transform: translateX(160px); opacity: 1; }
+}
+@keyframes slide {
+  from { transform: translateX(0); }
+  to { transform: translateX(160px); }
+}
+.anim-card .replay {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-70);
+  font-family: var(--font);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.3s var(--ease-out-quint);
+}
+.anim-card .replay:hover { border-color: var(--accent); color: var(--accent); }
+.hover-demo { margin-top: 48px; border: 1px solid var(--line-subtle); padding: 32px; }
+.hover-demo .label { color: var(--text-50); display: block; margin-bottom: 16px; }
+
+/* ============ 9. COMPONENTS ============ */
+.comp-block { border: 1px solid var(--line-subtle); padding: 32px; margin-bottom: 32px; }
+.comp-block .label { color: var(--text-50); display: block; margin-bottom: 20px; }
+.comp-row { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; }
+.badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  padding: 8px 16px;
+}
+.badge.outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.carousel-ctl { display: flex; align-items: center; gap: 20px; }
+.carousel-ctl .arrow {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font-size: 20px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.5s var(--ease-out-quint);
+}
+.carousel-ctl .arrow:hover { border-color: var(--accent); color: var(--accent); }
+.carousel-ctl .page { font-size: 11px; letter-spacing: 0.3em; color: var(--text-50); }
+.carousel-ctl .page b { color: var(--text); font-weight: 500; }
+.mock-nav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  border: 1px solid var(--line);
+  padding: 16px 24px;
+}
+.mock-nav .logo {
+  font-size: 14px;
+  letter-spacing: 0.4rem;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.mock-nav .logo .star { color: var(--accent); }
+.mock-nav .links { display: flex; gap: 24px; flex: 1; }
+.mock-nav .links a {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-70);
+  text-decoration: none;
+}
+.mock-nav .links a:hover { color: var(--accent); }
+.hero-collage { position: relative; padding: 64px 0; overflow: hidden; }
+.hero-collage .ring {
+  position: absolute;
+  top: 50%; right: -80px;
+  width: 380px; height: 380px;
+  margin-top: -190px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.hero-collage .ring.r2 { width: 260px; height: 260px; margin-top: -130px; right: 40px; border-color: var(--accent); opacity: 0.4; }
+.hero-collage .mega {
+  position: relative;
+  font-size: clamp(2.5rem, 7vw, 6rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 0.95;
+}
+.hero-collage .mega em { font-style: normal; color: var(--accent); }
+
+/* ============ 10. TOKENS JSON ============ */
+pre.tokens {
+  border: 1px solid var(--line);
+  background: var(--bg-alt);
+  padding: 32px;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  overflow-x: auto;
+  color: var(--text-70);
+  cursor: pointer;
+}
+pre.tokens:hover { border-color: var(--accent); }
+
+/* ============ TOAST ============ */
+.toast {
+  position: fixed;
+  bottom: 32px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--accent);
+  color: #FFFFFF;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  padding: 12px 28px;
+  z-index: 200;
+  opacity: 0;
+  transition: transform 0.5s var(--ease-out-quint), opacity 0.5s var(--ease-out-quint);
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ TOP NAV ============ -->
+<nav class="topnav">
+  <div class="nav-links">
+    <a class="navlink" href="#overview">Overview</a>
+    <a class="navlink" href="#color">Color</a>
+    <a class="navlink" href="#typography">Typography</a>
+    <a class="navlink" href="#spacing">Spacing</a>
+    <a class="navlink" href="#shadows">Shadows</a>
+    <a class="navlink" href="#radius">Radius</a>
+    <a class="navlink" href="#opacity">Opacity</a>
+    <a class="navlink" href="#animations">Motion</a>
+    <a class="navlink" href="#components">Components</a>
+    <a class="navlink" href="#tokens">Tokens</a>
+  </div>
+  <button class="btn" id="themeToggle" type="button">Light / Dark</button>
+</nav>
+
+<div class="layout">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <span class="label">Primary Color</span>
+    <input type="color" id="accentPicker" value="#EA6D15" aria-label="主色选择器">
+    <div class="accent-hex" id="accentHex">#EA6D15</div>
+    <hr>
+    <span class="label">Mode</span>
+    <div class="mode-switch">
+      <button id="modeDark" class="active" type="button">Dark</button>
+      <button id="modeLight" type="button">Light</button>
+    </div>
+  </aside>
+
+  <main>
+
+    <!-- ============ 1. OVERVIEW ============ -->
+    <section class="section" id="overview">
+      <div class="section-head">
+        <span class="section-num">01</span>
+        <h2 class="section-title">Overview</h2>
+      </div>
+      <h1 class="hero-mega">
+        Sanctuary<br>On The Moon
+        <span class="thin-line"></span>
+      </h1>
+      <p class="section-desc" style="margin-top:0;">
+        太空圣殿设计系统 —— 纪念性、极简、仪式感。以深渊蓝黑夜空为底，巨字排版构筑纪念性尺度，
+        1px 细线划分秩序，唯一的一抹 copper 橙色如同月面舱门的指示灯，克制而神圣。
+        全站无阴影、无渐变堆砌，层级仅靠底色交替与描边建立。
+      </p>
+      <div class="tag-row">
+        <span class="tag accent">Monumental</span>
+        <span class="tag">Minimal</span>
+        <span class="tag">Ritualistic</span>
+        <span class="tag">Mega Type</span>
+        <span class="tag">Hairline</span>
+        <span class="tag">Copper Accent</span>
+        <span class="tag">Space</span>
+      </div>
+    </section>
+
+    <!-- ============ 2. COLOR PALETTE ============ -->
+    <section class="section" id="color">
+      <div class="section-head">
+        <span class="section-num">02</span>
+        <h2 class="section-title">Color Palette</h2>
+      </div>
+      <p class="section-desc">点击任意色块复制其 HEX 值。copper 为全站唯一强调色，其余皆为夜与光的中性色阶。</p>
+      <div class="swatch-grid">
+        <button class="swatch" data-copy="#EA6D15">
+          <span class="chip" style="background:#EA6D15;"></span>
+          <span class="meta"><span class="name">Copper · 强调</span><span class="hex">#EA6D15</span></span>
+        </button>
+        <button class="swatch" data-copy="#080E21">
+          <span class="chip" style="background:#080E21;border-bottom:1px solid var(--line-subtle);"></span>
+          <span class="meta"><span class="name">Abyss · 主背景</span><span class="hex">#080E21</span></span>
+        </button>
+        <button class="swatch" data-copy="#0B1533">
+          <span class="chip" style="background:#0B1533;border-bottom:1px solid var(--line-subtle);"></span>
+          <span class="meta"><span class="name">Darkblue · 次背景</span><span class="hex">#0B1533</span></span>
+        </button>
+        <button class="swatch" data-copy="#000000">
+          <span class="chip" style="background:#000000;border-bottom:1px solid var(--line-subtle);"></span>
+          <span class="meta"><span class="name">Black · 深渊</span><span class="hex">#000000</span></span>
+        </button>
+        <button class="swatch" data-copy="#FFFFFF">
+          <span class="chip" style="background:#FFFFFF;"></span>
+          <span class="meta"><span class="name">White · 主文字</span><span class="hex">#FFFFFF</span></span>
+        </button>
+        <button class="swatch" data-copy="rgba(255,255,255,0.15)">
+          <span class="chip" style="background:rgba(255,255,255,0.15);"></span>
+          <span class="meta"><span class="name">Line · 细线</span><span class="hex">rgba(255,255,255,0.15)</span></span>
+        </button>
+        <button class="swatch" data-copy="rgba(255,255,255,0.10)">
+          <span class="chip" style="background:rgba(255,255,255,0.10);"></span>
+          <span class="meta"><span class="name">Line Subtle · 弱线</span><span class="hex">rgba(255,255,255,0.10)</span></span>
+        </button>
+        <button class="swatch" data-copy="rgba(255,255,255,0.5)">
+          <span class="chip" style="background:rgba(255,255,255,0.5);"></span>
+          <span class="meta"><span class="name">Text Muted · 弱字</span><span class="hex">rgba(255,255,255,0.5)</span></span>
+        </button>
+      </div>
+
+      <div class="semantic-groups">
+        <div class="group">
+          <span class="label">Brand</span>
+          <ul>
+            <li><span><i class="dot" style="background:#EA6D15;"></i>primary</span><code>#EA6D15</code></li>
+          </ul>
+        </div>
+        <div class="group">
+          <span class="label">Surface</span>
+          <ul>
+            <li><span><i class="dot" style="background:#080E21;"></i>background</span><code>#080E21</code></li>
+            <li><span><i class="dot" style="background:#0B1533;"></i>backgroundAlt</span><code>#0B1533</code></li>
+            <li><span><i class="dot" style="background:#000;"></i>black</span><code>#000</code></li>
+          </ul>
+        </div>
+        <div class="group">
+          <span class="label">Text</span>
+          <ul>
+            <li><span><i class="dot" style="background:#FFF;"></i>primary</span><code>#FFF</code></li>
+            <li><span><i class="dot" style="background:rgba(255,255,255,0.7);"></i>secondary</span><code>70% white</code></li>
+            <li><span><i class="dot" style="background:rgba(255,255,255,0.5);"></i>muted</span><code>50% white</code></li>
+          </ul>
+        </div>
+        <div class="group">
+          <span class="label">Border</span>
+          <ul>
+            <li><span><i class="dot" style="background:rgba(255,255,255,0.15);"></i>default</span><code>15% white</code></li>
+            <li><span><i class="dot" style="background:rgba(255,255,255,0.10);"></i>subtle</span><code>10% white</code></li>
+            <li><span><i class="dot" style="background:#EA6D15;"></i>accent</span><code>#EA6D15</code></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. TYPOGRAPHY ============ -->
+    <section class="section" id="typography">
+      <div class="section-head">
+        <span class="section-num">03</span>
+        <h2 class="section-title">Typography</h2>
+      </div>
+      <div class="type-table">
+        <div class="type-row">
+          <span class="token">Mega</span>
+          <span class="spec">clamp(3rem,8vw,9rem) / 700 / uppercase</span>
+          <span class="demo demo-mega">Sanctuary</span>
+        </div>
+        <div class="type-row">
+          <span class="token">Title</span>
+          <span class="spec">48px / 700 / uppercase</span>
+          <span class="demo demo-title">The Sanctuary</span>
+        </div>
+        <div class="type-row">
+          <span class="token">Subtitle</span>
+          <span class="spec">24px / 500</span>
+          <span class="demo demo-subtitle">A Testimony To Our Humanity</span>
+        </div>
+        <div class="type-row">
+          <span class="token">Body</span>
+          <span class="spec">16px / 400 / line-height 1.6</span>
+          <span class="demo demo-body">A message in a bottle addressed to the cosmos — engraved on sapphire discs and placed on the Moon for millions of years.</span>
+        </div>
+        <div class="type-row">
+          <span class="token">Label</span>
+          <span class="spec">11px / 500 / uppercase / ls 0.2em</span>
+          <span class="demo demo-label">Pixels Per Disc</span>
+        </div>
+        <div class="type-row">
+          <span class="token">Logo</span>
+          <span class="spec">14px / ls 0.4rem</span>
+          <span class="demo demo-logo">Sanctuary</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. SPACING ============ -->
+    <section class="section" id="spacing">
+      <div class="section-head">
+        <span class="section-num">04</span>
+        <h2 class="section-title">Spacing</h2>
+      </div>
+      <div class="spacing-row"><span class="name">XS</span><span class="val">8px</span><span class="bar" style="width:8px;"></span></div>
+      <div class="spacing-row"><span class="name">SM</span><span class="val">16px</span><span class="bar" style="width:16px;"></span></div>
+      <div class="spacing-row"><span class="name">MD</span><span class="val">24px</span><span class="bar" style="width:24px;"></span></div>
+      <div class="spacing-row"><span class="name">LG</span><span class="val">48px</span><span class="bar" style="width:48px;"></span></div>
+      <div class="spacing-row"><span class="name">XL</span><span class="val">96px</span><span class="bar" style="width:96px;"></span></div>
+      <div class="spacing-row"><span class="name">2XL</span><span class="val">160px</span><span class="bar" style="width:160px;"></span></div>
+    </section>
+
+    <!-- ============ 5. SHADOWS ============ -->
+    <section class="section" id="shadows">
+      <div class="section-head">
+        <span class="section-num">05</span>
+        <h2 class="section-title">Shadows</h2>
+      </div>
+      <p class="section-desc">全站无阴影。层级完全依靠 1px 描边（rgba(255,255,255,0.15)）与底色交替建立 —— 如同夜空中层层嵌套的舱室。</p>
+      <div class="shadow-nest">
+        <span class="label">Level 0 · #080E21</span>
+        <div class="lvl2">
+          <span class="label">Level 1 · #0B1533</span>
+          <div class="lvl3">
+            <span class="label">Level 2 · #000000</span>
+            <span style="font-size:13px;opacity:0.7;">box-shadow: none — always.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. BORDER RADIUS ============ -->
+    <section class="section" id="radius">
+      <div class="section-head">
+        <span class="section-num">06</span>
+        <h2 class="section-title">Border Radius</h2>
+      </div>
+      <div class="radius-row">
+        <div class="radius-item">
+          <div class="shape" style="width:64px;height:64px;border-radius:4px;"></div>
+          <span class="label">SM · 4px</span>
+        </div>
+        <div class="radius-item">
+          <div class="shape" style="width:64px;height:64px;border-radius:10px;"></div>
+          <span class="label">MD · 10px</span>
+        </div>
+        <div class="radius-item">
+          <div class="shape" style="width:128px;height:64px;border-radius:99px;"></div>
+          <span class="label">Pill · 99px</span>
+        </div>
+        <div class="radius-item">
+          <div class="shape" style="width:64px;height:64px;border-radius:50%;"></div>
+          <span class="label">Circle · 50%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 7. OPACITY ============ -->
+    <section class="section" id="opacity">
+      <div class="section-head">
+        <span class="section-num">07</span>
+        <h2 class="section-title">Opacity</h2>
+      </div>
+      <div class="opacity-cols">
+        <div class="cell">
+          <span class="label">Text · White</span>
+          <p class="op-text" style="color:var(--text);">100% — Sanctuary</p>
+          <p class="op-text" style="color:var(--text-70);">70% — Sanctuary</p>
+          <p class="op-text" style="color:var(--text-50);">50% — Sanctuary</p>
+        </div>
+        <div class="cell">
+          <span class="label">Border · White</span>
+          <div class="op-border" style="border-color:var(--line);">border: 1px solid rgba(255,255,255,0.15)</div>
+          <div class="op-border" style="border-color:var(--line-subtle);">border: 1px solid rgba(255,255,255,0.10)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 8. ANIMATIONS ============ -->
+    <section class="section" id="animations">
+      <div class="section-head">
+        <span class="section-num">08</span>
+        <h2 class="section-title">Animations</h2>
+      </div>
+      <div class="anim-grid">
+        <div class="anim-card" data-anim>
+          <span class="label">easeOutQuint</span>
+          <code>cubic-bezier(0.165, 0.84, 0.44, 1)<br>位移 + 淡入</code>
+          <div class="anim-stage"><div class="anim-box a-quint"></div></div>
+          <button class="replay" type="button">Replay</button>
+        </div>
+        <div class="anim-card" data-anim>
+          <span class="label">easeInOutQuad</span>
+          <code>cubic-bezier(0.455, 0.03, 0.515, 0.955)</code>
+          <div class="anim-stage"><div class="anim-box a-quad"></div></div>
+          <button class="replay" type="button">Replay</button>
+        </div>
+        <div class="anim-card" data-anim>
+          <span class="label">easeInOutQuart</span>
+          <code>cubic-bezier(0.77, 0, 0.175, 1)</code>
+          <div class="anim-stage"><div class="anim-box a-quart"></div></div>
+          <button class="replay" type="button">Replay</button>
+        </div>
+      </div>
+      <div class="hover-demo">
+        <span class="label">Hover 演示 · 描边按钮 1s 填充 Copper</span>
+        <button class="btn" type="button">Discover The Sanctuary</button>
+      </div>
+    </section>
+
+    <!-- ============ 9. COMPONENTS ============ -->
+    <section class="section" id="components">
+      <div class="section-head">
+        <span class="section-num">09</span>
+        <h2 class="section-title">Components</h2>
+      </div>
+
+      <div class="comp-block">
+        <span class="label">CTA 按钮 · Copper 描边（hover 填铜） + 白色描边次按钮</span>
+        <div class="comp-row">
+          <button class="btn" type="button">Become Part Of It</button>
+          <button class="btn btn-ghost" type="button">Learn More</button>
+        </div>
+      </div>
+
+      <div class="comp-block">
+        <span class="label">数据 Badge · Copper 实底 / 描边态</span>
+        <div class="comp-row">
+          <span class="badge">Pixels Per Disc</span>
+          <span class="badge">1 000 000 000</span>
+          <span class="badge outline">Sapphire Disc</span>
+        </div>
+      </div>
+
+      <div class="comp-block">
+        <span class="label">轮播控制 · 圆箭头 + 页码</span>
+        <div class="carousel-ctl">
+          <button class="arrow" type="button" aria-label="上一页">&#8249;</button>
+          <span class="page"><b>1</b> &mdash; 9</span>
+          <button class="arrow" type="button" aria-label="下一页">&#8250;</button>
+        </div>
+      </div>
+
+      <div class="comp-block">
+        <span class="label">顶部导航条还原</span>
+        <div class="mock-nav">
+          <span class="logo">SAN<span class="star">&#10022;</span>TUARY</span>
+          <div class="links">
+            <a href="#components">The Project</a>
+            <a href="#components">The Discs</a>
+            <a href="#components">The Mission</a>
+            <a href="#components">Contribute</a>
+          </div>
+          <button class="btn" type="button" style="padding:8px 16px;">Press Kit</button>
+        </div>
+      </div>
+
+      <div class="comp-block">
+        <span class="label">组合示例 · 1px 白 15% 大圆环 + Copper 圆环与巨字叠压</span>
+        <div class="hero-collage">
+          <div class="ring"></div>
+          <div class="ring r2"></div>
+          <h3 class="mega">A Message<br>To The <em>Cosmos</em></h3>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10. TOKENS JSON ============ -->
+    <section class="section" id="tokens">
+      <div class="section-head">
+        <span class="section-num">10</span>
+        <h2 class="section-title">Tokens JSON</h2>
+      </div>
+      <p class="section-desc">点击代码块复制完整 tokens。</p>
+      <pre class="tokens" id="tokensPre" data-copy-tokens>{
+  "color": {"brand": {"primary": "#EA6D15"}, "surface": {"background": "#080E21", "backgroundAlt": "#0B1533", "black": "#000"}, "text": {"primary": "#FFF", "secondary": "rgba(255,255,255,0.7)", "muted": "rgba(255,255,255,0.5)"}, "border": {"default": "rgba(255,255,255,0.15)", "subtle": "rgba(255,255,255,0.10)", "accent": "#EA6D15"}},
+  "typography": {"fontFamily": {"base": "Jost, Futura, PingFang SC, sans-serif"}, "fontSize": {"xs": "11px", "sm": "13px", "md": "16px", "lg": "20px", "xl": "24px", "2xl": "36px", "3xl": "48px", "mega": "clamp(3rem,8vw,9rem)"}, "letterSpacing": {"label": "0.2em", "logo": "0.4rem"}},
+  "spacing": {"xs": "8px", "sm": "16px", "md": "24px", "lg": "48px", "xl": "96px", "2xl": "160px"},
+  "radius": {"sm": "4px", "md": "10px", "pill": "99px", "circle": "50%"},
+  "motion": {"duration": {"fast": "0.3s", "normal": "0.5s", "slow": "1s"}, "easing": {"standard": "cubic-bezier(0.165,0.84,0.44,1)", "inOut": "cubic-bezier(0.455,0.03,0.515,0.955)", "dramatic": "cubic-bezier(0.77,0,0.175,1)"}}
+}</pre>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast">已复制</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var root = document.documentElement;
+  var toast = document.getElementById('toast');
+  var toastTimer = null;
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 1600);
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { showToast('已复制 ' + text); });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); showToast('已复制 ' + text); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+  }
+
+  /* ---- 色块 / 代码块复制 ---- */
+  document.querySelectorAll('[data-copy]').forEach(function (el) {
+    el.addEventListener('click', function () { copyText(el.getAttribute('data-copy')); });
+  });
+  var tokensPre = document.getElementById('tokensPre');
+  tokensPre.addEventListener('click', function () { copyText(tokensPre.textContent.trim()); });
+
+  /* ---- 主色 picker：实时更新 --accent ---- */
+  var picker = document.getElementById('accentPicker');
+  var hexLabel = document.getElementById('accentHex');
+  picker.addEventListener('input', function () {
+    var v = picker.value.toUpperCase();
+    root.style.setProperty('--accent', v);
+    hexLabel.textContent = v;
+  });
+
+  /* ---- Light / Dark 切换 ---- */
+  var btnDark = document.getElementById('modeDark');
+  var btnLight = document.getElementById('modeLight');
+  var btnToggle = document.getElementById('themeToggle');
+
+  function setTheme(mode) {
+    root.setAttribute('data-theme', mode);
+    btnDark.classList.toggle('active', mode === 'dark');
+    btnLight.classList.toggle('active', mode === 'light');
+  }
+  btnDark.addEventListener('click', function () { setTheme('dark'); });
+  btnLight.addEventListener('click', function () { setTheme('light'); });
+  btnToggle.addEventListener('click', function () {
+    setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  /* ---- 动效演示：可重复触发 ---- */
+  document.querySelectorAll('[data-anim]').forEach(function (card) {
+    var box = card.querySelector('.anim-box');
+    card.querySelector('.replay').addEventListener('click', function () {
+      card.classList.remove('play');
+      /* 强制 reflow 以重置动画 */
+      void box.offsetWidth;
+      card.classList.add('play');
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+<!DOCTYPE html><html><body style="background:#080E21;margin:0;display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:16px">
+<script>
+const files = ["telescope-2-svgrepo-com.svg","telescope-4-svgrepo-com.svg","telescope-illustration-3-svgrepo-com.svg","satellite-dish-svgrepo-com.svg","satellite-dish-radar-svgrepo-com.svg","antenna-svgrepo-com.svg","antenna-svgrepo-com (1).svg","antenna-svgrepo-com (2).svg","satellite-svgrepo-com.svg","satellite-svgrepo-com (1).svg","satellite-svgrepo-com (2).svg","satellite-svgrepo-com (3).svg","rocket-svgrepo-com.svg","rocket-1-svgrepo-com.svg","toolbox-svgrepo-com.svg","toolbox-svgrepo-com (1).svg","toolbox-svgrepo-com (2).svg","toolbox-svgrepo-com (3).svg"];
+for (const f of files) {
+  document.write(`<div style="text-align:center"><img src="/assets/${encodeURIComponent(f)}" style="width:120px;height:120px;object-fit:contain;filter:invert(1)"><div style="color:#889;font:10px monospace;word-break:break-all">${f}</div></div>`);
+}
+</script></body></html>
