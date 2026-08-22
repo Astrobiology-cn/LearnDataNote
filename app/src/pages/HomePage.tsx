@@ -15,7 +15,8 @@ const sections = [
   {
     id: 'knowledge',
     title: '学科知识',
-    desc: '系统化的行星科学核心知识体系，从数学物理基础到遥感技术应用。',
+    // \n 处分行：避免 CJK 任意断行把「遥感」拆成「到遥／感技术应用」（R3 盲测修复）
+    desc: '系统化的行星科学核心知识体系，\n从数学物理基础到遥感技术应用。',
     link: '/knowledge/',
     linkText: '进入学科知识',
     Scene: KnowledgeScene,
@@ -57,7 +58,7 @@ function Hero() {
         scrollTrigger: {
           trigger: '#hero',
           start: 'top top',
-          end: '60% top',
+          end: '80% top', // R3：词标淡出拉长至 Hero 滚出 80%，缩小 scrub 结束后的死区
           scrub: true,
         },
       });
@@ -162,7 +163,9 @@ export default function HomePage() {
   return (
     <>
       <Hero />
-      <TransitionBand />
+      {/* Hero→Mission 带压缩至 12vh（R3）：Hero 已有弧光收口 + 火箭显影前提，
+          过长的带只会放大空带感；其余幕间保留 20vh 喘息 */}
+      <TransitionBand height="12vh" />
       <RocketManifesto />
       <TransitionBand />
       {sections.map(({ id, Scene, ...props }, i) => (

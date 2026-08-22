@@ -61,7 +61,7 @@ export default function SharedSpaceBackground() {
       scene = {
         isDark,
         fg: hslVarToRgb(cs.getPropertyValue('--foreground') || '0 0% 100%'),
-        primary: hslVarToRgb(cs.getPropertyValue('--primary') || '24 89% 50%'),
+        primary: hslVarToRgb(cs.getPropertyValue('--primary') || '25 84% 50%'),
         muted: hslVarToRgb(cs.getPropertyValue('--muted-foreground') || '224 17% 42%'),
       };
     }

@@ -229,9 +229,6 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
       };
     }
 
-    /** 铜橙（恒定强调色；--primary 令牌实际解析为 #F1690E，与规格 #EA6D15 有偏差，令牌修正前维持硬编码） */
-    const COPPER = '234,109,21';
-
     /** 塔架地面高度与俯仰轴（碟面摆动中心）位置 */
     function mount() {
       const groundY = H - 34;
@@ -330,7 +327,7 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
         deploy,
         main,
         bg,
-        copper: COPPER,
+        copper: theme.copper,
       });
     }
 
@@ -359,7 +356,7 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
       for (const ring of rings) {
         const g = ringGeom(ring, now);
         if (!g) continue;
-        ctx.strokeStyle = `rgba(${COPPER},${g.alpha.toFixed(3)})`;
+        ctx.strokeStyle = `rgba(${theme.copper},${g.alpha.toFixed(3)})`;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(g.cx, g.cy, g.r, 0, Math.PI * 2);
@@ -424,7 +421,7 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
 
         // 闪光光晕
         if (flash > 0) {
-          ctx.strokeStyle = `rgba(${COPPER},${(flash * 0.8).toFixed(3)})`;
+          ctx.strokeStyle = `rgba(${theme.copper},${(flash * 0.8).toFixed(3)})`;
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(s.x, s.y, 6 + (1 - flash) * 7, 0, Math.PI * 2);
@@ -438,7 +435,7 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
           y: s.y,
           rot: s.seed + now * 0.0006,
           main,
-          copper: COPPER,
+          copper: theme.copper,
           flash,
           alpha: 0.75 + flash * 0.25,
         });
@@ -628,7 +625,7 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
         const pAge = now - p.pulseT0;
         if (pAge >= 0 && pAge < 600) {
           const pa = (1 - pAge / 600) * 0.9;
-          ctx.fillStyle = `rgba(${COPPER},${pa.toFixed(3)})`;
+          ctx.fillStyle = `rgba(${theme.copper},${pa.toFixed(3)})`;
           ctx.globalAlpha = 1;
           ctx.beginPath();
           ctx.arc(p.x + ox, p.y + oy, 1.7, 0, Math.PI * 2);

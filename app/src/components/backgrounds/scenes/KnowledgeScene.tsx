@@ -76,7 +76,6 @@ const FORMULAS = [
   'SiO₂',
   'FeO',
 ];
-const COPPER = '234,109,21';
 const MAX_POINTS = 1200;
 /** 望远镜默认指向：正左（与下一场景左下朝右上的射电望远镜对望） */
 const AZ_DEFAULT = 180;
@@ -104,7 +103,7 @@ type GlyphParticle = {
   delay: number;
   dur: number;
   text: string; // 短公式/符号
-  size: number; // 9-13px
+  size: number; // 7-9px（R3 自 9-13 收小：网格间距 ~9px，9px 以上字形糊在一起）
   phase: number;
   tw: number;
   trail: Pt[];
@@ -308,7 +307,7 @@ export default function KnowledgeScene({ title, desc, link, linkText }: Props) {
           text: useFrag
             ? FRAGS[Math.floor(Math.random() * FRAGS.length)]
             : GLYPHS[Math.floor(Math.random() * GLYPHS.length)],
-          size: 9 + Math.floor(Math.random() * 5), // 9-13px
+          size: 7 + Math.floor(Math.random() * 3), // 7-9px
           phase: Math.random() * Math.PI * 2,
           tw: 0.8 + Math.random() * 1.8,
           trail: [],
@@ -444,15 +443,15 @@ export default function KnowledgeScene({ title, desc, link, linkText }: Props) {
         azDeg: azCur,
         altDeg: altCur + wob,
         main,
-        copper: COPPER,
+        copper: theme.copper,
         alpha: alpha * 0.9,
       });
 
       // 拖拽焦点：枢轴处铜橙微光
       if (dragging) {
         const gr = ctx.createRadialGradient(px, py, 0, px, py, mh * 1.1);
-        gr.addColorStop(0, `rgba(${COPPER},${(0.28 * alpha).toFixed(3)})`);
-        gr.addColorStop(1, `rgba(${COPPER},0)`);
+        gr.addColorStop(0, `rgba(${theme.copper},${(0.28 * alpha).toFixed(3)})`);
+        gr.addColorStop(1, `rgba(${theme.copper},0)`);
         ctx.fillStyle = gr;
         ctx.beginPath();
         ctx.arc(px, py, mh * 1.1, 0, Math.PI * 2);
@@ -646,14 +645,14 @@ export default function KnowledgeScene({ title, desc, link, linkText }: Props) {
               ctx!.fillText(g.text, tp.x, tp.y);
             });
           }
-          ctx!.fillStyle = k < 1 ? `rgba(${COPPER},0.95)` : main;
+          ctx!.fillStyle = k < 1 ? `rgba(${theme.copper},0.95)` : main;
           ctx!.fillText(g.text, g.x, g.y);
         } else {
           const flying = i === excIdx && excT0 > 0;
           const flicker = animate
             ? 0.72 + 0.28 * Math.sin(now * 0.002 * g.tw + g.phase)
             : 0.9;
-          ctx!.fillStyle = flying ? `rgba(${COPPER},0.95)` : main;
+          ctx!.fillStyle = flying ? `rgba(${theme.copper},0.95)` : main;
           ctx!.globalAlpha = flying ? 1 : flicker;
           ctx!.fillText(g.text, g.x, g.y);
           ctx!.globalAlpha = 1;
@@ -678,8 +677,8 @@ export default function KnowledgeScene({ title, desc, link, linkText }: Props) {
       if (landA > 0) fillGround(geom, groundRgb, gA, landA, H - sinkY);
       strokeArc(geom, main, 1, 0.55 * (1 - settleT)); // 圆 → 地平线弧
       if (landA > 0) {
-        strokeArc(geom, `rgba(${COPPER},1)`, 1, 0.4 * landA, -2); // 弧线上缘铜橙微光
-        strokeArc(geom, `rgba(${COPPER},1)`, 5, 0.1 * landA, -4);
+        strokeArc(geom, `rgba(${theme.copper},1)`, 1, 0.4 * landA, -2); // 弧线上缘铜橙微光
+        strokeArc(geom, `rgba(${theme.copper},1)`, 5, 0.1 * landA, -4);
       }
       drawScope(now, geom, landA, animate, main);
       drawToolbox(now, geom, landA, animate, main, isDark);
@@ -885,7 +884,7 @@ export default function KnowledgeScene({ title, desc, link, linkText }: Props) {
           style={{ left: '50%', top: 'calc(30% + 5rem)' }}
         >
           <p className="label-plate mb-3">{title}</p>
-          <p className="text-[13px] text-secondary-foreground/80 leading-relaxed max-w-[320px] mx-auto">
+          <p className="text-[13px] text-secondary-foreground/80 leading-relaxed max-w-[320px] mx-auto whitespace-pre-line">
             {desc}
           </p>
         </div>

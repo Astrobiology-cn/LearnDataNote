@@ -8,7 +8,7 @@ import { readCanvasTheme, observeCanvasTheme } from '../lib/canvasTheme';
 gsap.registerPlugin(ScrollTrigger);
 
 /**
- * RocketManifesto — 首页宣言区：宣言浮于 3D 线框火箭腹部。
+ * RocketManifesto — 首页宣言区：实心宣言排印于 3D 线框火箭下方。
  *
  * 火箭为参数化 3D 线框（rocketLineArt.ts，点/边集合 + 弱透视投影 s=F/(F+z)，
  * 只描边三档线宽/透明度，铜橙仅腹部一道环带），机头朝 +x，支持绕纵轴进动、
@@ -19,19 +19,21 @@ gsap.registerPlugin(ScrollTrigger);
  *
  * 滚动叙事（ScrollTrigger scrub，start 'top bottom' → end 'bottom top'，双向可逆）：
  * - 进入段（t<0.38）：火箭自 Hero 行星末态屏位（0.5W, 0.40H）后方的真 z 深度
- *   飞出——起点 z 大（透视缩放 ≈0.06）、alpha 极低（前段近乎被星球遮挡），
- *   随 smoothstep 缓动向观察者飞近（z→0），缩放由投影 1/z 天然给出（无幂次
- *   假透视）；机头偏航朝向观察者，随停靠转正；
+ *   飞出——起点 z 大（透视缩放 ≈0.16）、alpha 自 u≈0.02 即起沿 E-FADE 淡入
+ *   （R3 前提显影：消除 Hero 收场与火箭显影之间的空带），随 smoothstep 缓动
+ *   向观察者飞近（z→0），缩放由投影 1/z 天然给出（无幂次假透视）；
+ *   机头偏航朝向观察者，随停靠转正；
  * - 停靠段（0.38–0.62）：悬停 0.45H（sin ±4px 微浮动），宣言浮层淡入，
  *   Our Mission 铭牌同步（略错峰）淡入；
  * - 离场段（t>0.62）：z 增大远去（透视缩回小点）、alpha→0 消失，机头转入纵深，
  *   宣言/铭牌随离场淡出。
  * 淡化走 E-FADE cubic-bezier(0.455,0.03,0.515,0.955)。尾焰长度只看滚动速度。
  *
- * 构图（R2 盲测修复）：火箭基准 L 随视口放大（min(0.60W, 0.98H)，去掉旧 560px
- * 上限），大屏不再「又小又孤单」；宣言从舟腹移至火箭下方安全区（0.72H），
- * 改实心前景色排印——镂空叠压舟腹的读感在盲测中被判定不可读，故让位可读性；
- * 铭牌下移至 top-24，避开停靠对齐时的 sticky 导航（68px）。
+ * 构图（R3 盲测修复）：火箭基准 L 再放大（min(0.72W, 1.12H)），宣言字号放大
+ * 至 clamp(18px, 1.5vw+9px, 38px)，整幕垂直三段（铭牌 top-24 / 舟 0.45H /
+ * 宣言 0.75H）饱满庄重；极扁视口（H<520）宣言下移 0.80H 并收 lineHeight 1.55、
+ * 铭牌上移 6%，避免与尾翼相触。宣言为实心前景色排印（R2 起自舟腹移至下方
+ * 安全区——镂空叠压舟腹的读感在盲测中被判定不可读，故让位可读性）。
  *
  * 取色走 CSS 变量（lib/canvasTheme.ts：getComputedStyle 读取 + MutationObserver
  * 监听 .dark 切换重取重绘）；IntersectionObserver 离屏暂停 rAF（迟滞阈值 0.1）；
@@ -39,7 +41,6 @@ gsap.registerPlugin(ScrollTrigger);
  * 停靠中央的清晰火箭（宣言/铭牌常显）。
  */
 
-const COPPER = '234,109,21';
 /** 宣言按语义断为两行，每行 11 字 */
 const LINE_1 = '系统化行星科学知识体系';
 const LINE_2 = '连接知识、学者与工具。';
@@ -91,7 +92,7 @@ function cubicBezierEasing(x1: number, y1: number, x2: number, y2: number) {
 
 type Pose = { x: number; y: number; z: number; alpha: number; dock: number };
 
-const Z_SCALE = 0.06; // 远端透视缩放（完全由 z 深度的投影 1/z 给出）
+const Z_SCALE = 0.16; // 远端透视缩放（完全由 z 深度的投影 1/z 给出；R3 自 0.06 上调，显影前提后远端不再缩成不可见的点）
 
 /**
  * 滚动进度 → 火箭位姿：z 深度远点逼近 → 中段停靠（z=0）→ z 增大远去消失。
@@ -104,15 +105,16 @@ function pose(t: number, W: number, H: number, F: number): Pose {
   const Z_FAR = F * (1 / Z_SCALE - 1);
   if (t < IN) {
     // 「从星球背后飞出」：起点锚定 Hero 行星末态屏位（0.5W, 0.40H）后方的
-    // 真 z 深度（缩放 ≈0.06），前 1/4 段 alpha 极低（近乎被星球遮挡），随后
-    // z→0 向观察者飞近放大，机头偏航朝向观察者、随停靠转正。
+    // 真 z 深度（缩放 ≈0.16），alpha 自 u≈0.02 即起淡入（R3 显影前提，消灭
+    // Hero 收场后的空带），随后 z→0 向观察者飞近放大，机头偏航朝向观察者、
+    // 随停靠转正。
     const u = clamp01(t / IN);
     const s = smooth(u);
     return {
       x: W * 0.5,
       y: lerp(H * 0.4, H * 0.45, s),
       z: Z_FAR * (1 - s),
-      alpha: E_FADE(clamp01((u - 0.22) / 0.25)),
+      alpha: E_FADE(clamp01((u - 0.02) / 0.3)),
       dock: smooth((t - (IN - 0.06)) / 0.06),
     };
   }
@@ -144,11 +146,11 @@ function plateAlpha(t: number) {
   return E_FADE(clamp01(raw));
 }
 
-/** 宣言浮层文字：Noto Serif SC、实心前景色（移出舟腹后镂空无底可衬，可读性优先） */
+/** 宣言浮层文字：Noto Serif SC、实心前景色（移出舟腹后镂空无底可衬，可读性优先）。
+ *  lineHeight 由容器承载（build() 按视口高度下调，极扁视口防与尾翼相触） */
 const maniLineStyle: CSSProperties = {
-  fontSize: 'clamp(16px, 1.2vw + 8px, 30px)',
+  fontSize: 'clamp(18px, 1.5vw + 9px, 38px)',
   fontWeight: 600,
-  lineHeight: 1.9,
   letterSpacing: '0.12em',
   color: 'hsl(var(--foreground))',
 };
@@ -186,15 +188,24 @@ export default function RocketManifesto() {
       H = canvas.offsetHeight;
       canvas.width = W;
       canvas.height = H;
+      // 极扁视口（如 844×390 横屏）：宣言下移并收紧行距、铭牌上移，避开尾翼
+      const short = H < 520;
+      if (maniRef.current) {
+        maniRef.current.style.top = short ? '80%' : '75%';
+        maniRef.current.style.lineHeight = short ? '1.55' : '1.9';
+      }
+      if (plateRef.current) {
+        // 极扁视口：18% ≈ 70px，恰好落在 68px sticky 导航之下
+        plateRef.current.style.top = short ? '18%' : '';
+      }
     }
 
     function draw(now: number, animate: boolean) {
       if (!ctx) return;
       ctx.clearRect(0, 0, W, H);
       const t = scrollT;
-      // 视觉尺度随视口放大：L 取 min(0.60W, 0.98H)，不再设 560px 硬上限
-      // （大屏下火箭与宣言组不再只占屏幕中央一小块）
-      const L = Math.min(W * 0.6, H * 0.98);
+      // 视觉尺度随视口放大：L 取 min(0.72W, 1.12H)（R3 再放大，整幕构图饱满）
+      const L = Math.min(W * 0.72, H * 1.12);
       const F = 6 * L; // 焦距（与 rocketLineArt 的 F_RATIO 一致）
       const p = pose(t, W, H, F);
 
@@ -240,13 +251,13 @@ export default function RocketManifesto() {
       // 绕纵轴进动：飞行中缓旋，停靠收敛至 π/4（四翼呈 X 交叉）
       const roll = Math.PI / 4 + (animate ? (1 - p.dock) * now * 0.0005 : 0);
 
-      // 火箭 3D 线框（描边色随主题；铜橙仅腹部环带；缩放由 z 投影天然给出）
+      // 火箭 3D 线框（描边色随主题；铜橙仅腹部环带，取色 --primary；缩放由 z 投影天然给出）
       ctx.save();
       ctx.translate(cx, cy);
       const art = drawRocketLineArt(ctx, {
         L,
         main: theme.main,
-        copper: COPPER,
+        copper: theme.copper,
         alpha: p.alpha,
         z: p.z,
         roll,
@@ -270,8 +281,8 @@ export default function RocketManifesto() {
         const fx = tailX - dirX * fl;
         const fy = tailY - dirY * fl;
         const grad = ctx.createLinearGradient(tailX, tailY, fx, fy);
-        grad.addColorStop(0, `rgba(${COPPER},0.5)`);
-        grad.addColorStop(1, `rgba(${COPPER},0)`);
+        grad.addColorStop(0, `rgba(${theme.copper},0.5)`);
+        grad.addColorStop(1, `rgba(${theme.copper},0)`);
         const pw = L * art.s * 0.05;
         ctx.beginPath();
         ctx.moveTo(tailX - dirY * pw, tailY + dirX * pw);
@@ -368,12 +379,12 @@ export default function RocketManifesto() {
         className="absolute inset-0 w-full h-full pointer-events-none"
         aria-hidden="true"
       />
-      {/* 宣言 HTML 浮层：停靠期间位于火箭下方安全区（0.72H，避开舟体投影区），
-          dock 淡入/离场淡出 */}
+      {/* 宣言 HTML 浮层：停靠期间位于火箭下方安全区（默认 0.75H，极扁视口
+          由 build() 下移收行距），dock 淡入/离场淡出 */}
       <div
         ref={maniRef}
-        className="absolute left-1/2 top-[72%] -translate-x-1/2 -translate-y-1/2 z-10 text-center pointer-events-none"
-        style={{ opacity: REDUCED_MOTION ? 1 : 0 }}
+        className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 text-center pointer-events-none"
+        style={{ opacity: REDUCED_MOTION ? 1 : 0, top: '75%', lineHeight: 1.9 }}
       >
         <p className="font-heading" style={maniLineStyle}>
           {LINE_1}

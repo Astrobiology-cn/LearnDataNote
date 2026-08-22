@@ -48,7 +48,8 @@ function usePlanetLayout() {
   return {
     isMobile,
     x: 0, // Sanctuary 居中构图：行星如月，悬于词标之后
-    y: isMobile ? 1.6 : 0.78, // 行星上移，为下方按钮留出净空
+    // R3：桌面行星上移（0.78→1.35），大屏双模式下副标题都不再被行星下缘/暗盘压住
+    y: isMobile ? 1.6 : 1.35,
     scale: isMobile ? 0.55 : 0.9,
   };
 }

@@ -39,7 +39,6 @@ type Props = {
   linkText: string;
 };
 
-const COPPER = '234,109,21';
 const TITLE_TEXT = 'SCHOLARS';
 const FIELD_STARS = 900; // 银河带漂移星
 const CLUSTER_STARS = 350; // 标题区伏笔星团（总量 > LETTER_COUNT，成形后星空不空场）
@@ -526,9 +525,10 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
       });
     }
 
-    /** 北斗七星屏幕坐标：水平中轴，铭牌描述下方居中 */
+    /** 北斗七星屏幕坐标：水平中轴，铭牌描述下方居中。
+     *  R3 放大（scale 上限 120→380）：标题聚成后下方空间的视觉重量由北斗承担 */
     function layoutDipper() {
-      const scale = Math.min(W * 0.13, 120);
+      const scale = Math.min(W * 0.26, 380);
       const ox = (Math.min(...DIPPER_STARS.map((p) => p.x)) + Math.max(...DIPPER_STARS.map((p) => p.x))) / 2;
       const oy = (Math.min(...DIPPER_STARS.map((p) => p.y)) + Math.max(...DIPPER_STARS.map((p) => p.y))) / 2;
       const cx = W / 2;
@@ -688,6 +688,7 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
         isDark: theme.isDark,
         rgb: theme.rgb,
         main: theme.main,
+        copper: theme.copper,
       };
     }
 
@@ -746,7 +747,7 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
     function draw(now: number, animate: boolean) {
       if (!ctx) return;
       ctx.clearRect(0, 0, W, H);
-      const { isDark, rgb, main } = colors();
+      const { isDark, rgb, main, copper: COPPER } = colors();
       const sf = fadeObj.v; // 场景入场淡入因子
       if (sf <= 0.001) return;
 
@@ -926,8 +927,8 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
         const dm = Math.hypot(p.x - mouse.x, p.y - mouse.y);
         const hov = dipHover ? Math.max(0, 1 - dm / 70) : 0;
         const endStar = i === 6;
-        const baseR = endStar ? 2.6 : 2.0;
-        const baseA = endStar ? 0.95 : 0.8;
+        const baseR = endStar ? 3.5 : 2.8;
+        const baseA = endStar ? 1.0 : 0.88;
         const twinkle = animate ? 0.75 + 0.25 * Math.sin((now * Math.PI * 2) / 4000 + DIPPER_PHASES[i]) : 0.9;
         const r = baseR * (1 + dipLitF * 0.2 + hov * 0.35);
 

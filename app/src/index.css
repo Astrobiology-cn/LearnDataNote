@@ -20,11 +20,11 @@
     --popover-foreground: 226 65% 12%;
 
     /* Single accent: copper */
-    --primary: 24 89% 50%;           /* #EA6D15 */
+    --primary: 25 84% 50%;           /* #EA6D15 */
     --primary-foreground: 45 27% 96%;
     --secondary: 45 20% 90%;
     --secondary-foreground: 226 30% 32%;
-    --accent-c: 24 89% 50%;
+    --accent-c: 25 84% 50%;
     --accent-foreground: 45 27% 96%;
 
     /* Feedback */
@@ -36,18 +36,18 @@
     /* Borders & focus */
     --border: 226 20% 84%;           /* ≈ rgba(11,21,51,0.15) */
     --input: 226 20% 84%;
-    --ring: 24 89% 50%;
+    --ring: 25 84% 50%;
     --radius: 0.375rem;              /* 近乎直角：6px */
 
     /* Sidebar */
     --sidebar-background: 45 24% 93%;
     --sidebar-foreground: 226 12% 38%;
-    --sidebar-primary: 24 89% 50%;
+    --sidebar-primary: 25 84% 50%;
     --sidebar-primary-foreground: 45 27% 96%;
     --sidebar-accent: 45 18% 88%;
     --sidebar-accent-foreground: 226 65% 12%;
     --sidebar-border: 226 20% 84%;
-    --sidebar-ring: 24 89% 50%;
+    --sidebar-ring: 25 84% 50%;
 
     /* Wireframe geometry lines */
     --wireframe: 226 65% 12%;
@@ -75,11 +75,11 @@
     --popover: 226 65% 12%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 24 89% 50%;           /* copper stays */
+    --primary: 25 84% 50%;           /* copper stays #EA6D15 */
     --primary-foreground: 228 61% 8%;
     --secondary: 226 40% 16%;
     --secondary-foreground: 0 0% 72%;
-    --accent-c: 24 89% 50%;
+    --accent-c: 25 84% 50%;
     --accent-foreground: 228 61% 8%;
 
     --muted: 226 40% 16%;
@@ -89,16 +89,16 @@
 
     --border: 227 25% 22%;           /* ≈ rgba(255,255,255,0.12) */
     --input: 227 25% 22%;
-    --ring: 24 89% 50%;
+    --ring: 25 84% 50%;
 
     --sidebar-background: 228 55% 10%;
     --sidebar-foreground: 0 0% 72%;
-    --sidebar-primary: 24 89% 50%;
+    --sidebar-primary: 25 84% 50%;
     --sidebar-primary-foreground: 228 61% 8%;
     --sidebar-accent: 226 35% 15%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 227 25% 18%;
-    --sidebar-ring: 24 89% 50%;
+    --sidebar-ring: 25 84% 50%;
 
     --wireframe: 0 0% 100%;
   }
