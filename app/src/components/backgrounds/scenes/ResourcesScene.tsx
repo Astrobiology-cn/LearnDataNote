@@ -863,8 +863,12 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
             组装完成后淡入、划走先淡没（由 canvas 状态机驱动） */}
         <div
           ref={captionRef}
-          className="absolute left-1/2 top-[60%] z-10 flex w-[min(280px,78vw)] -translate-x-1/2 flex-col items-center text-center transition-opacity duration-700"
-          style={{ opacity: 0, pointerEvents: 'none' }}
+          className="absolute left-1/2 top-[60%] z-10 flex w-[min(280px,78vw)] -translate-x-1/2 flex-col items-center text-center"
+          style={{
+            opacity: 0,
+            pointerEvents: 'none',
+            transition: 'opacity 0.5s cubic-bezier(0.455, 0.03, 0.515, 0.955)',
+          }}
         >
           <p className="label-plate mb-3 opacity-80">{title}</p>
           <p className="text-sm text-secondary-foreground/60 leading-relaxed mb-7">{desc}</p>
@@ -941,7 +945,8 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
         .receiver .rc-label {
           opacity: 0;
           transform: translateY(4px);
-          transition: opacity 0.4s ease, transform 0.4s ease;
+          transition: opacity 0.5s cubic-bezier(0.455, 0.03, 0.515, 0.955),
+            transform 0.5s cubic-bezier(0.455, 0.03, 0.515, 0.955);
         }
         .receiver:hover .rc-label,
         .receiver:focus-visible .rc-label {

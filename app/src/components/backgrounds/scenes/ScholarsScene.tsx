@@ -10,7 +10,7 @@ import gsap from 'gsap';
  * 真实星位归一化模板（相对星形取自 J2000 赤道坐标换算，alpha ≈0.15），
  * 背景星之间不再连网，留出大片纯净星空。
  *
- * 标题：进视口 55% 时 ~1000 颗星被"点名"飞向 'SCHOLARS' 点阵
+ * 标题：标题目标区（探针锚点）进视口 55% 时 ~1000 颗星被"点名"飞向 'SCHOLARS' 点阵
  * （离屏 `700 110px "Noto Serif SC", serif`、letterSpacing 0.08em 采样，
  * 与三幕衬线显示字体统一），字母星 r≈2.2px、亮度 +30%；字母内不再连线，
  * 纯密集点阵成字（点阵够密时字形自明，去掉蛇形连线的网格感）。
@@ -392,6 +392,8 @@ const easeFade = cubicBezier(0.455, 0.03, 0.515, 0.955);
 export default function ScholarsScene({ title, desc, link, linkText }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // 标题粒子目标区探针：与采样点阵同位，phaseObserver 据此判定成形/飞散
+  const titleProbeRef = useRef<HTMLDivElement>(null);
   // 组装完成 → 铭牌淡入；划走 → 先淡没
   const [assembled, setAssembled] = useState(REDUCED_MOTION);
   // hover 北斗 → 浮现入口文字
@@ -985,21 +987,25 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
       pauseObserver.observe(canvas);
       cleanups.push(() => pauseObserver.disconnect());
 
-      // 标题成形/飞散：IntersectionObserver 阈值（进入视口 55% 成形，<25% 飞散）
-      const phaseObserver = new IntersectionObserver(
-        (entries) => {
-          const entry = entries[0];
-          const now = performance.now();
-          if (entry.intersectionRatio >= 0.55) startForming(now);
-          else if (entry.intersectionRatio < 0.25) startDispersing(now);
-        },
-        { threshold: [0, 0.25, 0.55] },
-      );
-      phaseObserver.observe(canvas);
-      cleanups.push(() => phaseObserver.disconnect());
+      // 标题成形/飞散：对标题粒子目标区（probe，与采样点阵同位）单独判定——
+      // 目标区进入视口 55% 成形、<25% 飞散（与 Knowledge/Resources 同一锚点纪律，
+      // 使上一幕标题飞散与本幕点名成形在滚动区间上咬合，消除幕间无字空窗）
+      const titleProbe = titleProbeRef.current;
+      if (titleProbe) {
+        const phaseObserver = new IntersectionObserver(
+          (entries) => {
+            const entry = entries[0];
+            const now = performance.now();
+            if (entry.intersectionRatio >= 0.55) startForming(now);
+            else if (entry.intersectionRatio < 0.25) startDispersing(now);
+          },
+          { threshold: [0, 0.25, 0.55] },
+        );
+        phaseObserver.observe(titleProbe);
+        cleanups.push(() => phaseObserver.disconnect());
 
-      {
-        const r = wrap.getBoundingClientRect();
+        // 兜底：挂载时标题目标区若已在视口内（深链/刷新直达），立即成形
+        const r = titleProbe.getBoundingClientRect();
         if (r.top < window.innerHeight && r.bottom > 0) startForming(performance.now());
       }
 
@@ -1094,6 +1100,15 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
           ref={canvasRef}
           className="absolute inset-0 w-full h-full pointer-events-none"
           aria-hidden="true"
+        />
+
+        {/* 标题粒子目标区探针：与采样点阵同位（cx 50% / cy 36%，范围 72%×32%），
+            phaseObserver 据此判定标题成形/飞散（与 Knowledge/Resources 同纪律） */}
+        <div
+          ref={titleProbeRef}
+          aria-hidden="true"
+          className="absolute pointer-events-none"
+          style={{ left: '14%', top: '20%', width: '72%', height: '32%' }}
         />
 
         {/* 中文铭牌 + 描述：SCHOLARS 正下方同轴居中，组装完成后淡入 */}
