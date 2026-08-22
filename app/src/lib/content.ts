@@ -1,7 +1,20 @@
 /* Content loader for markdown-driven site data.
- * Uses Vite import.meta.glob to bundle md files at build time,
- * then parses YAML frontmatter with a lightweight custom parser.
+ * Uses Vite import.meta.glob to bundle md files at build time;
+ * frontmatter 解析用 gray-matter（js-yaml 标准 YAML），
+ * 浏览器侧经 ./bufferShim 提供最小 Buffer 垫片（必须最先导入）。
  */
+
+import './bufferShim';
+import matter from 'gray-matter';
+
+/* R5：手写 YAML 解析器退役，换 gray-matter。两类语义差异已在内容侧消解：
+ * 1) `color: #XXX` 未加引号在标准 YAML 里是注释 → null（6 处 _index.md 已加引号）；
+ * 2) `date: 2026-06-10` 被 js-yaml 解析为 Date（news loader 统一转回 YYYY-MM-DD 字符串）；
+ * 另修复 jgr-planets.md 未加引号的 `name: ...: Planets`（标准 YAML 非法）。 */
+function parseFrontmatter(raw: string): { data: Record<string, any>; content: string } {
+  const { data, content } = matter(raw);
+  return { data, content: content.trim() };
+}
 
 export interface Scholar {
   id: string;
@@ -57,71 +70,7 @@ export interface KnowledgeChapter {
   content: string;
 }
 
-/* ── Lightweight YAML frontmatter parser ── */
-function parseFrontmatter(raw: string): { data: Record<string, any>; content: string } {
-  const match = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
-  if (!match) return { data: {}, content: raw };
-
-  const [, yaml, content] = match;
-  const data: Record<string, any> = {};
-  const lines = yaml.split('\n');
-
-  let currentKey = '';
-  let inArray = false;
-  let arrayItems: string[] = [];
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-
-    if (trimmed.startsWith('- ') && inArray && currentKey) {
-      arrayItems.push(trimmed.slice(2).replace(/^["']|["']$/g, ''));
-      continue;
-    }
-
-    if (inArray && currentKey) {
-      data[currentKey] = arrayItems;
-      arrayItems = [];
-      inArray = false;
-    }
-
-    const colonIdx = trimmed.indexOf(':');
-    if (colonIdx === -1) continue;
-
-    const key = trimmed.slice(0, colonIdx).trim();
-    let value: any = trimmed.slice(colonIdx + 1).trim();
-
-    if (value === '') {
-      currentKey = key;
-      inArray = true;
-      arrayItems = [];
-      continue;
-    }
-
-    // Remove quotes
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      value = value.slice(1, -1);
-    }
-
-    // Boolean
-    if (value === 'true') value = true;
-    else if (value === 'false') value = false;
-    // Number
-    else if (!isNaN(Number(value)) && value !== '') value = Number(value);
-    // Inline array [a, b, c]
-    else if (value.startsWith('[') && value.endsWith(']')) {
-      value = value.slice(1, -1).split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, ''));
-    }
-
-    data[key] = value;
-  }
-
-  if (inArray && currentKey) {
-    data[currentKey] = arrayItems;
-  }
-
-  return { data, content: content.trim() };
-}
+/* ── Frontmatter 解析（gray-matter，垫片与差异说明见文件头） ── */
 
 /* ── Load scholars ── */
 const scholarModules = import.meta.glob('../content/scholars/*.md', { eager: true, as: 'raw' });
@@ -253,7 +202,8 @@ export const newsData: News[] = Object.entries(newsModules)
       id: data.id,
       title: data.title || '',
       summary: data.summary || '',
-      date: data.date || '',
+      // js-yaml 把 `date: 2026-06-10` 解析为 Date 对象——统一转回 ISO 日期字符串
+      date: data.date instanceof Date ? data.date.toISOString().slice(0, 10) : String(data.date ?? ''),
       category: data.category || 'knowledge',
       coverVariant: Number(data.coverVariant) || 1,
       order: Number(data.order) || 99,

@@ -9,19 +9,28 @@ const REDUCED_MOTION =
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ── Static gradient fallback (WebGL unavailable / reduced motion) ── */
+
+/** 柔光兜底：行星就位前的首帧占位（与 StaticHero 同款径向渐变），
+ *  R5 起也用作 lazy Suspense fallback——返回首页时首帧不再只有词标 */
+function HeroGlow() {
+  return (
+    <div
+      className="absolute inset-0"
+      style={{
+        background:
+          'radial-gradient(ellipse at 50% 40%, hsl(var(--card)) 0%, hsl(var(--background)) 55%, hsl(var(--background)) 100%)',
+      }}
+    />
+  );
+}
+
 function StaticHero({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="relative w-full overflow-hidden bg-background"
       style={{ minHeight: '100dvh' }}
     >
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse at 50% 40%, hsl(var(--card)) 0%, hsl(var(--background)) 55%, hsl(var(--background)) 100%)',
-        }}
-      />
+      <HeroGlow />
       <div className="relative z-10 min-h-[100dvh] flex flex-col">
         {children}
       </div>
@@ -72,9 +81,10 @@ export default function PlanetHero({
       style={{ minHeight: '100dvh' }}
       {...props}
     >
-      {/* 3D Canvas (code-split, loads after first paint) */}
+      {/* 3D Canvas (code-split, loads after first paint；R5：chunk 已由 Layout
+          空闲预热，fallback 柔光盖住残余的模块解析空窗) */}
       <div className="absolute inset-0 z-0">
-        <Suspense fallback={null}>
+        <Suspense fallback={<HeroGlow />}>
           <PlanetCanvas scrollProgress={scrollProgress} />
         </Suspense>
       </div>

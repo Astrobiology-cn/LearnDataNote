@@ -1,6 +1,6 @@
 ---
 id: jgr-planets
-name: Journal of Geophysical Research: Planets
+name: "Journal of Geophysical Research: Planets"
 description: 地球物理研究杂志：行星分册，行星科学领域的权威期刊。
 url: https://agupubs.onlinelibrary.wiley.com/journal/21699100
 language: 英文

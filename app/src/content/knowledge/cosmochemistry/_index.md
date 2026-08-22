@@ -6,5 +6,5 @@ category: 化学与遥感
 featured: false
 order: 3
 icon: 🧪
-color: #A855F7
+color: "#A855F7"
 ---

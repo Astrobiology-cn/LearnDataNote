@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useParams, useNavigate } from 'react-router';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import { getSubjectById, getChaptersBySubject, knowledgeSubjects, knowledgeChapters } from '../lib/content';
 import Fuse from 'fuse.js';
@@ -30,14 +30,22 @@ const LINE_HEIGHTS = [
 ];
 
 export default function KnowledgeContentPage() {
-  const { subjectId } = useParams<{ subjectId: string }>();
+  const { subjectId, chapterId } = useParams<{ subjectId: string; chapterId?: string }>();
+  const navigate = useNavigate();
   const subject = getSubjectById(subjectId || '');
   // useMemo 固定引用：getChaptersBySubject 每次渲染返回新数组，会让下游
   // fuse useMemo 与搜索 useEffect 每轮都重跑（setSearchResults([]) 新引用）——
   // 渲染→effect→setState→渲染 死循环（Maximum update depth exceeded，页面白屏）
   const chapters = useMemo(() => (subject ? getChaptersBySubject(subject.id) : []), [subject]);
-  const [activeChapterId, setActiveChapterId] = useState<string | null>(null);
-  const activeChapter = chapters.find((c) => c.id === activeChapterId) || chapters[0];
+  // R5：活动章节由 URL 驱动（/knowledge/:subjectId/:chapterId?），可深链可分享；
+  // chapterId 缺失或非法时兜底第一章，绝不 404
+  const activeChapter = chapters.find((c) => c.id === chapterId) || chapters[0];
+  // 非法 chapterId 兜底第一章后把 URL 规范化（replace，不留假地址）
+  useEffect(() => {
+    if (subject && chapterId && activeChapter && chapterId !== activeChapter.id) {
+      navigate(`/knowledge/${subject.id}/${activeChapter.id}/`, { replace: true });
+    }
+  }, [subject, chapterId, activeChapter, navigate]);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [fontSize, setFontSize] = useState(16);
@@ -49,12 +57,11 @@ export default function KnowledgeContentPage() {
   const contentRef = useRef<HTMLDivElement>(null);
   const headerRef = useScrollReveal<HTMLDivElement>({ from: 'fade', duration: 0.7 });
 
-  // Set default active chapter
-  useEffect(() => {
-    if (chapters.length && !activeChapterId) {
-      setActiveChapterId(chapters[0].id);
-    }
-  }, [chapters, activeChapterId]);
+  // 切换章节 = 路由跳转（深链同步，Layout 负责滚回顶部）
+  function goToChapter(id: string) {
+    if (!subject) return;
+    navigate(`/knowledge/${subject.id}/${id}/`);
+  }
 
   // Fuse.js search
   const fuse = useMemo(() => {
@@ -241,7 +248,8 @@ export default function KnowledgeContentPage() {
               <button
                 key={r.chapter.id}
                 onClick={() => {
-                  setActiveChapterId(r.chapter.id);
+                  // 全局搜索结果可能跨学科：用章节自身的 subjectId 跳转
+                  navigate(`/knowledge/${r.chapter.subjectId}/${r.chapter.id}/`);
                   setSearchQuery('');
                   setSearchResults([]);
                 }}
@@ -279,7 +287,7 @@ export default function KnowledgeContentPage() {
                 return (
                   <button
                     key={c.id}
-                    onClick={() => setActiveChapterId(c.id)}
+                    onClick={() => goToChapter(c.id)}
                     className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded text-sm transition-colors ${
                       active
                         ? 'bg-primary/10 text-primary font-medium'
@@ -321,7 +329,8 @@ export default function KnowledgeContentPage() {
                   {activeChapter.title}
                 </h2>
               </div>
-              <MarkdownRenderer url={`/src/content/knowledge/${subject.id}/${activeChapter.id}.md`} />
+              {/* R5：正文走构建期 bundle（content.ts import.meta.glob），不再运行时 fetch */}
+              <MarkdownRenderer content={activeChapter.content} />
             </>
           ) : (
             <div className="text-center py-20 text-muted-foreground">
@@ -338,7 +347,7 @@ export default function KnowledgeContentPage() {
                   const prevCh = cIdx > 0 ? chapters[cIdx - 1] : null;
                   return prevCh ? (
                     <button
-                      onClick={() => setActiveChapterId(prevCh.id)}
+                      onClick={() => goToChapter(prevCh.id)}
                       className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
                     >
                       <ChevronLeft size={14} />
@@ -353,7 +362,7 @@ export default function KnowledgeContentPage() {
                   const nextCh = cIdx < chapters.length - 1 ? chapters[cIdx + 1] : null;
                   return nextCh ? (
                     <button
-                      onClick={() => setActiveChapterId(nextCh.id)}
+                      onClick={() => goToChapter(nextCh.id)}
                       className="text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1"
                     >
                       {nextCh.title}

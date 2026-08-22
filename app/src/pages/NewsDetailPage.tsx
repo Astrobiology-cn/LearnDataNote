@@ -30,8 +30,7 @@ export default function NewsDetailPage() {
   }
 
   const meta = categoryMeta[news.category];
-  /* 仅把正文（不含 frontmatter）交给 MarkdownRenderer，经 data: URL 走其既有的 fetch 流程 */
-  const mdUrl = `data:text/markdown;charset=utf-8,${encodeURIComponent(news.content)}`;
+  /* 正文直接来自构建期 bundle（lib/content.ts），不再绕 data: URL + fetch */
 
   return (
     <div className="max-w-[680px] mx-auto px-6 py-16 md:py-24">
@@ -60,7 +59,7 @@ export default function NewsDetailPage() {
       </div>
 
       {/* 正文 */}
-      <MarkdownRenderer url={mdUrl} />
+      <MarkdownRenderer content={news.content} />
 
       {/* 返回链接 */}
       <div className="mt-14 pt-6 border-t border-border/40">

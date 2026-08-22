@@ -17,7 +17,8 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="knowledge" element={<KnowledgePage />} />
-        <Route path="knowledge/:subjectId" element={<KnowledgeContentPage />} />
+        {/* R5：chapterId 可选——章节可深链/分享；非法章节 id 由页面内兜底到第一章 */}
+        <Route path="knowledge/:subjectId/:chapterId?" element={<KnowledgeContentPage />} />
         <Route path="scholars" element={<ScholarsPage />} />
         <Route path="scholars/:scholarId" element={<ScholarDetailPage />} />
         <Route path="resources" element={<ResourcesPage />} />

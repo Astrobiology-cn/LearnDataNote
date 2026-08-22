@@ -278,6 +278,14 @@ function Fallback() {
 }
 
 /* ── 3D scene canvas (lazy-loaded by PlanetHero) ── */
+
+/** R5：空闲预热——子页浏览期间把三张行星纹理灌进 drei 的全局纹理缓存，
+ *  返回首页时 useTexture 同步命中缓存、不再 suspend，消除星球延迟淡入 */
+export function preloadPlanetAssets() {
+  useTexture.preload(['/assets/planet_day.jpg', '/assets/planet_night.jpg']);
+  useTexture.preload('/assets/2k_stars.jpg');
+}
+
 export default function PlanetCanvas({ scrollProgress }: { scrollProgress: number }) {
   const isDark = useIsDark();
   // 离屏暂停：Hero 滚出视口时把 frameloop 切为 'never'，停止烧帧

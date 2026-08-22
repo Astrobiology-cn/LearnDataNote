@@ -6,5 +6,5 @@ category: 行星与地质
 featured: false
 order: 5
 icon: 🌍
-color: #7A8B6F
+color: "#7A8B6F"
 ---

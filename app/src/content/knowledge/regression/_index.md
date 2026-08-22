@@ -6,5 +6,5 @@ category: 基础理论
 featured: false
 order: 2
 icon: 📊
-color: #478CD0
+color: "#478CD0"
 ---

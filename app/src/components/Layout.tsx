@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { navItems, scholarsData, resourcesData } from '../lib/content';
-import { Link, useLocation, Outlet } from 'react-router';
+import { Link, useLocation, Outlet, useNavigationType } from 'react-router';
 import { useTheme } from '../hooks/use-theme';
 import { Search, Sun, Moon, Menu, X } from 'lucide-react';
 import SharedSpaceBackground from './SharedSpaceBackground';
@@ -61,10 +61,45 @@ export default function Layout() {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  /* ── 路由切换滚回顶部（hash 路由默认保留滚动深度，子页面会从半山腰进入）── */
+  /* ── 滚动位置纪律（R4 回顶部 + R5 POP 恢复）：
+     PUSH/REPLACE（主动跳转）一律回顶部——hash 路由默认保留滚动深度，
+     子页面会从半山腰进入；POP（浏览器前进/后退）恢复该路径离开时的位置。
+     每个 pathname 的位置随滚动持续存入 sessionStorage ── */
+  const navType = useNavigationType();
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    const onScroll = () => {
+      try { sessionStorage.setItem(`psh-scroll:${location.pathname}`, String(window.scrollY)); } catch { /* ignore */ }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, [location.pathname]);
+  useEffect(() => {
+    if (navType === 'POP') {
+      let saved = 0;
+      try { saved = Number(sessionStorage.getItem(`psh-scroll:${location.pathname}`)) || 0; } catch { /* ignore */ }
+      if (saved > 0) {
+        // 等内容出完一帧再落位，避免被布局后移顶歪
+        requestAnimationFrame(() => window.scrollTo({ top: saved, behavior: 'instant' }));
+        return;
+      }
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [location.pathname, navType]);
+
+  /* ── R5：空闲预热 Hero 3D 场景——任意页面停留时后台加载 PlanetCanvas chunk
+     并预载行星纹理（drei 全局缓存），返回首页时 lazy 与 useTexture 同步命中，
+     消除「星球延迟一两秒才淡入」的重进延迟 ── */
+  useEffect(() => {
+    const warm = () => {
+      import('./PlanetCanvas').then((m) => m.preloadPlanetAssets());
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(warm, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(warm, 2000);
+    return () => window.clearTimeout(t);
+  }, []);
 
   /* ── Click outside → close search ── */
   useEffect(() => {

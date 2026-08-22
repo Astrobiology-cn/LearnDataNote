@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -6,8 +6,11 @@ import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import "katex/dist/katex.min.css";
 
+/* R5：正文统一走构建期 import.meta.glob（lib/content.ts 已 eager 打进 bundle），
+ * 组件直接收 content 字符串——消除运行时 fetch（旧 url 模式在产物里
+ * 还会 404：/src/content/** 不会进 dist） */
 interface MarkdownRendererProps {
-  url: string;
+  content: string;
 }
 
 // ── Obsidian Callout types ──
@@ -93,51 +96,13 @@ function escapeHtml(text: string): string {
 }
 
 // ── Main component ──
-export default function MarkdownRenderer({ url }: MarkdownRendererProps) {
-  const [content, setContent] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch(url)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.text();
-      })
-      .then((text) => {
-        setContent(text);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [url]);
-
+export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
   const processedContent = useMemo(() => {
     if (!content) return "";
     // Strip YAML frontmatter (--- ... ---) so it never renders as body text
     const stripped = content.replace(/^\s*---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
     return preprocessCallouts(stripped);
   }, [content]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 text-muted-foreground">
-        <div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin mr-3" />
-        加载中...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-16">
-        <div className="text-3xl mb-3 text-destructive">⚠️</div>
-        <p className="text-destructive">加载失败: {error}</p>
-      </div>
-    );
-  }
 
   return (
     <div className="markdown-body">

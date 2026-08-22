@@ -173,7 +173,9 @@ export default function HomePage() {
         <Fragment key={id}>
           <Scene {...props} />
           {i < sections.length - 1 ? (
-            <TransitionBand />
+            // R5：Scholars→Resources 带压至 14vh（盲测唯一「是不是坏了」时刻）；
+            // Knowledge→Scholars 保留 20vh 喘息
+            <TransitionBand height={id === 'scholars' ? '14vh' : undefined} />
           ) : (
             <TransitionBand height="14vh" />
           )}

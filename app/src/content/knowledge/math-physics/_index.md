@@ -6,5 +6,5 @@ category: 基础理论
 featured: true
 order: 1
 icon: 📐
-color: #6366F1
+color: "#6366F1"
 ---

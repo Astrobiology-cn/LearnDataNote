@@ -752,7 +752,9 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
       cleanups.push(() => pauseObserver.disconnect());
 
       // 标题成形/飞散：对标题粒子目标区（probe，与 sampleTargets 区域同位）
-      // 单独判定——目标区进入视口 55% 成形，<25% 散回馈源；
+      // 单独判定——目标区进入视口 20% 即启程显影（R5 显影前提：粒子自馈源
+      // 飞向标题的 1.5-2.5s 迁徙过程填进 Scholars→Resources 幕间空窗，
+      // 同 R4 火箭显影前提纪律），<5%（回滚时）散回馈源；
       // 重新进入时 startForming 重新实例化一批粒子，非倒放
       const titleProbe = titleProbeRef.current;
       if (titleProbe) {
@@ -760,10 +762,11 @@ export default function ResourcesScene({ title, desc, link, linkText }: Props) {
           (entries) => {
             const entry = entries[0];
             const now = performance.now();
-            if (entry.intersectionRatio >= 0.55) startForming(now);
-            else if (entry.intersectionRatio < 0.25) startDissolving(now);
+            // 迟滞：≥0.2 成形 / <0.05 飞散，边界驻留不抖动
+            if (entry.intersectionRatio >= 0.2) startForming(now);
+            else if (entry.intersectionRatio < 0.05) startDissolving(now);
           },
-          { threshold: [0, 0.25, 0.55] },
+          { threshold: [0, 0.05, 0.2] },
         );
         phaseObserver.observe(titleProbe);
         cleanups.push(() => phaseObserver.disconnect());

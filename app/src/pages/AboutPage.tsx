@@ -21,7 +21,7 @@ const techStack = [
   { name: 'TypeScript', url: 'https://www.typescriptlang.org' },
   { name: 'Tailwind CSS', url: 'https://tailwindcss.com' },
   { name: 'shadcn/ui', url: 'https://ui.shadcn.com' },
-  { name: 'Three.js / Vanta', url: 'https://www.vantajs.com' },
+  { name: 'Three.js', url: 'https://threejs.org' },
   { name: 'GSAP', url: 'https://gsap.com' },
   { name: 'Lenis', url: 'https://lenis.studiofreight.com' },
   { name: 'KaTeX', url: 'https://katex.org' },

@@ -20,9 +20,12 @@ import { readCanvasTheme, observeCanvasTheme } from '../../../lib/canvasTheme';
  *
  * 入口：场景水平中轴线上固定北斗七星（真实比例，斗勺四星 + 斗柄三星
  * 弧排，摇光略亮；R4 再放大至 min(0.30W, 560)）。常态以极淡主色折线连出
- * 勺形（读出星座轮廓，不再是 7 粒孤点）；hover 七星包围盒时斗身→斗柄
- * 逐段点亮铜橙（每段 150ms），下方浮现"进入学者信息"（react-router Link）；
- * 离开 hover（或标题散掉）时逐段熄灭。
+ * 勺形（读出星座轮廓，不再是 7 粒孤点）；自摇光沿斗柄弧势向右下延长一条
+ * 更淡的「循弧见大角」过渡弧（R5），末端缀一颗稍亮回响星，把视线引向下幕；
+ * hover 七星包围盒时斗身→斗柄逐段点亮铜橙（每段 150ms），下方浮现
+ * "进入学者信息"（react-router Link）；离开 hover（或标题散掉）时逐段熄灭。
+ * 北斗无星区半径 R5 收紧为 scale*0.5+40（≈320px，恰好罩住勺形；旧值
+ * 554px 挖空下半幕，是幕间空带主因）。
  *
  * 中文铭牌 + desc 位于 SCHOLARS 正下方同轴居中，组装完成后淡入、
  * 划走先淡没。场景入场星野淡入为时间驱动（进入视口即起 ~1.4s
@@ -546,7 +549,10 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
       };
       exX = cx;
       exY = cy;
-      exR = scale * 0.9 + 50;
+      // R5：exR 554 → 320。旧值（scale*0.9+50）以北斗为心挖去半径 ~554px 的星野，
+      // 而七星实际半宽仅 ~235px——无星区漫过下半幕直抵幕间带，是
+      // 「SCHOLARS 聚成后将近一屏一无所有」的主因；320px 仍完整罩住勺形
+      exR = scale * 0.5 + 40;
     }
 
     function build() {
@@ -923,6 +929,28 @@ export default function ScholarsScene({ title, desc, link, linkText }: Props) {
         ctx.lineTo(b.x, b.y);
       }
       ctx.stroke();
+
+      // 循斗柄之弧见大角（R5，幕间过渡）：自摇光沿斗柄弧势向右下延长一条
+      // 极淡弧线，末端缀一颗稍亮的「大角回响」星——把视线从北斗引向下幕，
+      // 填补勺形下方至幕间带上沿的视觉空窗（无星区缩小后此弧承担过渡）
+      if (dip.length >= 7) {
+        const p6 = dip[6];
+        const scale = Math.min(W * 0.3, 560);
+        const cArc = { x: p6.x + 0.2 * scale, y: p6.y + 0.05 * scale };
+        const eArc = { x: p6.x + 0.3 * scale, y: p6.y + 0.24 * scale };
+        ctx.lineWidth = 0.6;
+        ctx.strokeStyle = `rgba(${rgb},${((isDark ? 0.12 : 0.1) * sf).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.moveTo(p6.x, p6.y);
+        ctx.quadraticCurveTo(cArc.x, cArc.y, eArc.x, eArc.y);
+        ctx.stroke();
+        // 大角回响星：端点稍亮慢闪，与北斗同族取色（非铜橙）
+        const arcTw = animate ? 0.7 + 0.3 * Math.sin((now * Math.PI * 2) / 4600 + 3.1) : 0.85;
+        ctx.fillStyle = `rgba(${rgb},${(0.62 * arcTw * sf).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(eArc.x, eArc.y, 2.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       // 斗身→斗柄逐段连线
       ctx.lineWidth = 0.8;
